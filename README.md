@@ -19,7 +19,7 @@
 </p>
 
 **OpenClaw** is a _personal AI assistant_ you run on your own devices.
-It answers you on the channels you already use (WhatsApp, Telegram, Slack, Discord, Google Chat, Signal, iMessage, Microsoft Teams, WebChat), plus extension channels like BlueBubbles, Matrix, Zalo, and Zalo Personal. It can speak and listen on macOS/iOS/Android, and can render a live Canvas you control. The Gateway is just the control plane — the product is the assistant.
+It answers you on the channels you already use (WhatsApp, Telegram, Slack, Discord, Mattermost, Google Chat, Signal, iMessage, Microsoft Teams, WebChat), plus extension channels like BlueBubbles, Matrix, Zalo, and Zalo Personal. It can speak and listen on macOS/iOS/Android, and can render a live Canvas you control. The Gateway is just the control plane — the product is the assistant.
 
 If you want a personal, single-user assistant that feels local, fast, and always-on, this is it.
 
@@ -110,7 +110,7 @@ OpenClaw connects to real messaging surfaces. Treat inbound DMs as **untrusted i
 
 Full security guide: [Security](https://docs.openclaw.ai/gateway/security)
 
-Default behavior on Telegram/WhatsApp/Signal/iMessage/Microsoft Teams/Discord/Google Chat/Slack:
+Default behavior on Mattermost/Telegram/WhatsApp/Signal/iMessage/Microsoft Teams/Discord/Google Chat/Slack:
 
 - **DM pairing** (`dmPolicy="pairing"` / `channels.discord.dmPolicy="pairing"` / `channels.slack.dmPolicy="pairing"`; legacy: `channels.discord.dm.policy`, `channels.slack.dm.policy`): unknown senders receive a short pairing code and the bot does not process their message.
 - Approve with: `openclaw pairing approve <channel> <code>` (then the sender is added to a local allowlist store).
@@ -145,7 +145,7 @@ Run `openclaw doctor` to surface risky/misconfigured DM policies.
 
 ### Channels
 
-- [Channels](https://docs.openclaw.ai/channels): [WhatsApp](https://docs.openclaw.ai/channels/whatsapp) (Baileys), [Telegram](https://docs.openclaw.ai/channels/telegram) (grammY), [Slack](https://docs.openclaw.ai/channels/slack) (Bolt), [Discord](https://docs.openclaw.ai/channels/discord) (discord.js), [Google Chat](https://docs.openclaw.ai/channels/googlechat) (Chat API), [Signal](https://docs.openclaw.ai/channels/signal) (signal-cli), [BlueBubbles](https://docs.openclaw.ai/channels/bluebubbles) (iMessage, recommended), [iMessage](https://docs.openclaw.ai/channels/imessage) (legacy imsg), [Microsoft Teams](https://docs.openclaw.ai/channels/msteams) (extension), [Matrix](https://docs.openclaw.ai/channels/matrix) (extension), [Zalo](https://docs.openclaw.ai/channels/zalo) (extension), [Zalo Personal](https://docs.openclaw.ai/channels/zalouser) (extension), [WebChat](https://docs.openclaw.ai/web/webchat).
+- [Channels](https://docs.openclaw.ai/channels): [WhatsApp](https://docs.openclaw.ai/channels/whatsapp) (Baileys), [Telegram](https://docs.openclaw.ai/channels/telegram) (grammY), [Slack](https://docs.openclaw.ai/channels/slack) (Bolt), [Discord](https://docs.openclaw.ai/channels/discord) (discord.js), [Mattermost](https://docs.openclaw.ai/channels/mattermost) (extension), [Google Chat](https://docs.openclaw.ai/channels/googlechat) (Chat API), [Signal](https://docs.openclaw.ai/channels/signal) (signal-cli), [BlueBubbles](https://docs.openclaw.ai/channels/bluebubbles) (iMessage, recommended), [iMessage](https://docs.openclaw.ai/channels/imessage) (legacy imsg), [Microsoft Teams](https://docs.openclaw.ai/channels/msteams) (extension), [Matrix](https://docs.openclaw.ai/channels/matrix) (extension), [Zalo](https://docs.openclaw.ai/channels/zalo) (extension), [Zalo Personal](https://docs.openclaw.ai/channels/zalouser) (extension), [WebChat](https://docs.openclaw.ai/web/webchat).
 - [Group routing](https://docs.openclaw.ai/concepts/group-messages): mention gating, reply tags, per-channel chunking and routing. Channel rules: [Channels](https://docs.openclaw.ai/channels).
 
 ### Apps + nodes
@@ -180,7 +180,7 @@ Run `openclaw doctor` to surface risky/misconfigured DM policies.
 ## How it works (short)
 
 ```
-WhatsApp / Telegram / Slack / Discord / Google Chat / Signal / iMessage / BlueBubbles / Microsoft Teams / Matrix / Zalo / Zalo Personal / WebChat
+WhatsApp / Telegram / Slack / Discord / Mattermost / Google Chat / Signal / iMessage / BlueBubbles / Microsoft Teams / Matrix / Zalo / Zalo Personal / WebChat
                │
                ▼
 ┌───────────────────────────────┐
@@ -264,7 +264,7 @@ ClawHub is a minimal skill registry. With ClawHub enabled, the agent can search 
 
 ## Chat commands
 
-Send these in WhatsApp/Telegram/Slack/Google Chat/Microsoft Teams/WebChat (group commands are owner-only):
+Send these in WhatsApp/Telegram/Slack/Mattermost/Google Chat/Microsoft Teams/WebChat (group commands are owner-only):
 
 - `/status` — compact session status (model + tokens, cost when available)
 - `/mesh <goal>` — auto-plan + run a multi-step workflow (`/mesh plan|run|status|retry` available)
@@ -328,53 +328,9 @@ Minimal `~/.openclaw/openclaw.json` (model + defaults):
 
 ### Web Search
 
-OpenClaw supports multiple web search providers via the `web_search` tool. You can configure them in `~/.openclaw/openclaw.json` or using environment variables.
+OpenClaw supports multiple web search providers via the `web_search` tool (Brave, Perplexity, Tavily, SearXNG).
 
-#### Tavily
-
-[Tavily](https://tavily.com/) is a search engine optimized for AI agents.
-
-1.  **Environment Variable:** Set `TAVILY_API_KEY` in your environment.
-2.  **Configuration:** Update `~/.openclaw/openclaw.json`:
-    ```json
-    {
-      "tools": {
-        "web": {
-          "search": {
-            "provider": "tavily",
-            "tavily": {
-              "apiKey": "your-tavily-api-key"
-            }
-          }
-        }
-      }
-    }
-    ```
-
-#### SearXNG (Self-hosted)
-
-[SearXNG](https://github.com/searxng/searxng) is a free, privacy-respecting metasearch engine you can host yourself.
-
-1.  **Self-hosting with Docker:**
-    ```bash
-    docker run -d -p 8080:8080 searxng/searxng
-    ```
-2.  **Environment Variable:** (Optional) Set `SEARXNG_API_KEY` if your instance requires authentication.
-3.  **Configuration:** Update `~/.openclaw/openclaw.json`:
-    ```json
-    {
-      "tools": {
-        "web": {
-          "search": {
-            "provider": "searxng",
-            "searxng": {
-              "baseUrl": "http://localhost:8080"
-            }
-          }
-        }
-      }
-    }
-    ```
+Details: [Web Search Providers](/docs/websearch.md)
 
 ## Security model (important)
 
@@ -408,6 +364,22 @@ Details: [Security guide](https://docs.openclaw.ai/gateway/security) · [Docker 
 ### [Slack](https://docs.openclaw.ai/channels/slack)
 
 - Set `SLACK_BOT_TOKEN` + `SLACK_APP_TOKEN` (or `channels.slack.botToken` + `channels.slack.appToken`).
+
+### [Mattermost](https://docs.openclaw.ai/channels/mattermost)
+
+- Status: supported via plugin (`@openclaw/mattermost`).
+- Set `MATTERMOST_BOT_TOKEN` and `MATTERMOST_URL` (or `channels.mattermost.botToken` + `channels.mattermost.url`).
+
+```json5
+{
+  channels: {
+    mattermost: {
+      botToken: "mm-token-1234",
+      baseUrl: "https://chat.example.com",
+    },
+  },
+}
+```
 
 ### [Discord](https://docs.openclaw.ai/channels/discord)
 
