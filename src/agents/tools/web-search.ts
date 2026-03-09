@@ -67,7 +67,7 @@ const WebSearchSchema = Type.Object({
   freshness: Type.Optional(
     Type.String({
       description:
-        "Filter results by discovery time. Brave supports 'pd', 'pw', 'pm', 'py', and date range 'YYYY-MM-DDtoYYYY-MM-DD'. Perplexity supports 'pd', 'pw', 'pm', and 'py'.",
+        "Filter results by discovery time. Brave supports 'pd', 'pw', 'pm', 'py', and date range 'YYYY-MM-DDtoYYYY-MM-DD'. Perplexity, Tavily, and SearXNG support 'pd', 'pw', 'pm', and 'py'.",
     }),
   ),
 });
@@ -519,6 +519,40 @@ function freshnessToPerplexityRecency(freshness: string | undefined): string | u
   return map[freshness] ?? undefined;
 }
 
+/**
+ * Map normalized freshness values (pd/pw/pm/py) to Tavily's
+ * days parameter value.
+ */
+function freshnessToTavilyDays(freshness: string | undefined): number | undefined {
+  if (!freshness) {
+    return undefined;
+  }
+  const map: Record<string, number> = {
+    pd: 1,
+    pw: 7,
+    pm: 30,
+    py: 365,
+  };
+  return map[freshness] ?? undefined;
+}
+
+/**
+ * Map normalized freshness values (pd/pw/pm/py) to SearXNG's
+ * time_range parameter values.
+ */
+function freshnessToSearXNGTimeRange(freshness: string | undefined): string | undefined {
+  if (!freshness) {
+    return undefined;
+  }
+  const map: Record<string, string> = {
+    pd: "day",
+    pw: "week",
+    pm: "month",
+    py: "year",
+  };
+  return map[freshness] ?? undefined;
+}
+
 function isValidIsoDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
@@ -655,17 +689,26 @@ async function runTavilySearch(params: {
   apiKey: string;
   timeoutSeconds: number;
   count: number;
+  freshness?: string;
 }): Promise<TavilySearchResponse> {
+  const days = freshnessToTavilyDays(params.freshness);
+  const body: Record<string, unknown> = {
+    api_key: params.apiKey,
+    query: params.query,
+    max_results: params.count,
+  };
+
+  if (days !== undefined) {
+    body.search_depth = "advanced";
+    body.days = days;
+  }
+
   const res = await fetch(TAVILY_SEARCH_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      api_key: params.apiKey,
-      query: params.query,
-      max_results: params.count,
-    }),
+    body: JSON.stringify(body),
     signal: withTimeout(undefined, params.timeoutSeconds * 1000),
   });
 
@@ -685,10 +728,16 @@ async function runSearXNGSearch(params: {
   timeoutSeconds: number;
   count: number;
   allowPrivateNetwork?: boolean;
+  freshness?: string;
 }): Promise<SearXNGSearchResponse> {
   const url = new URL(`${params.baseUrl}/search`);
   url.searchParams.set("q", params.query);
   url.searchParams.set("format", "json");
+
+  const timeRange = freshnessToSearXNGTimeRange(params.freshness);
+  if (timeRange) {
+    url.searchParams.set("time_range", timeRange);
+  }
 
   const headers: Record<string, string> = {
     Accept: "application/json",
@@ -822,6 +871,7 @@ async function runWebSearch(params: {
       apiKey: params.apiKey!,
       timeoutSeconds: params.timeoutSeconds,
       count: params.count,
+      freshness: params.freshness,
     });
 
     const results = Array.isArray(data.results) ? data.results : [];
@@ -867,6 +917,7 @@ async function runWebSearch(params: {
       timeoutSeconds: params.timeoutSeconds,
       count: params.count,
       allowPrivateNetwork: params.allowPrivateNetwork,
+      freshness: params.freshness,
     });
 
     const results = Array.isArray(data.results) ? data.results : [];
@@ -1031,10 +1082,17 @@ export function createWebSearchTool(options?: {
       const search_lang = readStringParam(params, "search_lang");
       const ui_lang = readStringParam(params, "ui_lang");
       const rawFreshness = readStringParam(params, "freshness");
-      if (rawFreshness && provider !== "brave" && provider !== "perplexity") {
+      if (
+        rawFreshness &&
+        provider !== "brave" &&
+        provider !== "perplexity" &&
+        provider !== "tavily" &&
+        provider !== "searxng"
+      ) {
         return jsonResult({
           error: "unsupported_freshness",
-          message: "freshness is only supported by the Brave and Perplexity web_search providers.",
+          message:
+            "freshness is only supported by the Brave, Perplexity, Tavily, and SearXNG web_search providers.",
           docs: "https://docs.openclaw.ai/tools/web",
         });
       }
@@ -1088,4 +1146,6 @@ export const __testing = {
   extractGrokContent,
   resolveTavilyApiKey,
   resolveTavilyConfig,
+  freshnessToTavilyDays,
+  freshnessToSearXNGTimeRange,
 } as const;

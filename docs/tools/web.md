@@ -177,7 +177,7 @@ Search the web using your configured provider.
 - `ui_lang` (optional): ISO language code for UI elements
 - `freshness` (optional): filter by discovery time
   - Brave: `pd`, `pw`, `pm`, `py`, or `YYYY-MM-DDtoYYYY-MM-DD`
-  - Perplexity: `pd`, `pw`, `pm`, `py`
+  - Perplexity, Tavily, SearXNG: `pd`, `pw`, `pm`, `py`
 
 **Examples:**
 
