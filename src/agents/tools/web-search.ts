@@ -520,23 +520,6 @@ function freshnessToPerplexityRecency(freshness: string | undefined): string | u
 }
 
 /**
- * Map normalized freshness values (pd/pw/pm/py) to Tavily's
- * days parameter value.
- */
-function freshnessToTavilyDays(freshness: string | undefined): number | undefined {
-  if (!freshness) {
-    return undefined;
-  }
-  const map: Record<string, number> = {
-    pd: 1,
-    pw: 7,
-    pm: 30,
-    py: 365,
-  };
-  return map[freshness] ?? undefined;
-}
-
-/**
  * Map normalized freshness values (pd/pw/pm/py) to SearXNG's
  * time_range parameter values.
  */
@@ -689,19 +672,12 @@ async function runTavilySearch(params: {
   apiKey: string;
   timeoutSeconds: number;
   count: number;
-  freshness?: string;
 }): Promise<TavilySearchResponse> {
-  const days = freshnessToTavilyDays(params.freshness);
   const body: Record<string, unknown> = {
     api_key: params.apiKey,
     query: params.query,
     max_results: params.count,
   };
-
-  if (days !== undefined) {
-    body.search_depth = "advanced";
-    body.days = days;
-  }
 
   const res = await fetch(TAVILY_SEARCH_ENDPOINT, {
     method: "POST",
@@ -871,7 +847,6 @@ async function runWebSearch(params: {
       apiKey: params.apiKey!,
       timeoutSeconds: params.timeoutSeconds,
       count: params.count,
-      freshness: params.freshness,
     });
 
     const results = Array.isArray(data.results) ? data.results : [];
@@ -1086,13 +1061,12 @@ export function createWebSearchTool(options?: {
         rawFreshness &&
         provider !== "brave" &&
         provider !== "perplexity" &&
-        provider !== "tavily" &&
         provider !== "searxng"
       ) {
         return jsonResult({
           error: "unsupported_freshness",
           message:
-            "freshness is only supported by the Brave, Perplexity, Tavily, and SearXNG web_search providers.",
+            "freshness is only supported by the Brave, Perplexity, and SearXNG web_search providers.",
           docs: "https://docs.openclaw.ai/tools/web",
         });
       }
@@ -1147,6 +1121,5 @@ export const __testing = {
   extractGrokContent,
   resolveTavilyApiKey,
   resolveTavilyConfig,
-  freshnessToTavilyDays,
   freshnessToSearXNGTimeRange,
 } as const;

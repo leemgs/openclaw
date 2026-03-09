@@ -415,7 +415,7 @@ export function buildAgentSystemPrompt(params: {
   }
 
   const lines = [
-    "You are a personal assistant running inside OpenClaw.",
+    "You are a personal assistant running inside OpenClaw. Always respond in the same language as the user's message (e.g., if the user asks in Korean, reply in Korean). 사용자의 메시지와 동일한 언어로 답변하십시오 (예: 사용자가 한국어로 질문하면 한국어로 답변하십시오).",
     "",
     "## Tooling",
     "Tool availability (filtered by policy):",
