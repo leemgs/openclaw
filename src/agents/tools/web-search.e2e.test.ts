@@ -15,6 +15,8 @@ const {
   extractGrokContent,
   resolveTavilyApiKey,
   resolveTavilyConfig,
+  freshnessToTavilyDays,
+  freshnessToSearXNGTimeRange,
 } = __testing;
 
 describe("web_search tavily config resolution", () => {
@@ -148,6 +150,42 @@ describe("freshnessToPerplexityRecency", () => {
   it("returns undefined for undefined/empty input", () => {
     expect(freshnessToPerplexityRecency(undefined)).toBeUndefined();
     expect(freshnessToPerplexityRecency("")).toBeUndefined();
+  });
+});
+
+describe("freshnessToTavilyDays", () => {
+  it("maps Brave shortcuts to Tavily days values", () => {
+    expect(freshnessToTavilyDays("pd")).toBe(1);
+    expect(freshnessToTavilyDays("pw")).toBe(7);
+    expect(freshnessToTavilyDays("pm")).toBe(30);
+    expect(freshnessToTavilyDays("py")).toBe(365);
+  });
+
+  it("returns undefined for date ranges (not supported by Tavily)", () => {
+    expect(freshnessToTavilyDays("2024-01-01to2024-01-31")).toBeUndefined();
+  });
+
+  it("returns undefined for undefined/empty input", () => {
+    expect(freshnessToTavilyDays(undefined)).toBeUndefined();
+    expect(freshnessToTavilyDays("")).toBeUndefined();
+  });
+});
+
+describe("freshnessToSearXNGTimeRange", () => {
+  it("maps Brave shortcuts to SearXNG time_range values", () => {
+    expect(freshnessToSearXNGTimeRange("pd")).toBe("day");
+    expect(freshnessToSearXNGTimeRange("pw")).toBe("week");
+    expect(freshnessToSearXNGTimeRange("pm")).toBe("month");
+    expect(freshnessToSearXNGTimeRange("py")).toBe("year");
+  });
+
+  it("returns undefined for date ranges (not supported by SearXNG)", () => {
+    expect(freshnessToSearXNGTimeRange("2024-01-01to2024-01-31")).toBeUndefined();
+  });
+
+  it("returns undefined for undefined/empty input", () => {
+    expect(freshnessToSearXNGTimeRange(undefined)).toBeUndefined();
+    expect(freshnessToSearXNGTimeRange("")).toBeUndefined();
   });
 });
 
