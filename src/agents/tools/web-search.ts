@@ -1105,7 +1105,8 @@ export function createWebSearchTool(options?: {
           docs: "https://docs.openclaw.ai/tools/web",
         });
       }
-      const allowPrivateNetwork = Boolean(search?.allowPrivateNetwork);
+      const allowPrivateNetwork =
+        search?.allowPrivateNetwork ?? options?.config?.gateway?.mode === "local";
       const result = await runWebSearch({
         query,
         count: resolveSearchCount(count, DEFAULT_SEARCH_COUNT),

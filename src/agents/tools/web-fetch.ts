@@ -735,7 +735,8 @@ export function createWebFetchTool(options?: {
   const userAgent =
     (fetch && "userAgent" in fetch && typeof fetch.userAgent === "string" && fetch.userAgent) ||
     DEFAULT_FETCH_USER_AGENT;
-  const allowPrivateNetwork = Boolean(fetch?.allowPrivateNetwork);
+  const allowPrivateNetwork =
+    fetch?.allowPrivateNetwork ?? options?.config?.gateway?.mode === "local";
   const maxResponseBytes = resolveFetchMaxResponseBytes(fetch);
   return {
     label: "Web Fetch",

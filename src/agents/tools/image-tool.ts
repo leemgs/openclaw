@@ -526,6 +526,9 @@ export function createImageTool(options?: {
             : await loadWebMedia(resolvedPath ?? resolvedImage, {
                 maxBytes,
                 localRoots,
+                ssrfPolicy: {
+                  allowPrivateNetwork: options?.config?.gateway?.mode === "local",
+                },
               });
         if (media.kind !== "image") {
           throw new Error(`Unsupported media type: ${media.kind}`);

@@ -450,6 +450,7 @@ export function createGatewayHttpServer(opts: {
   /** Optional rate limiter for auth brute-force protection. */
   rateLimiter?: AuthRateLimiter;
   tlsOptions?: TlsOptions;
+  gatewayMode: "local" | "remote";
 }): HttpServer {
   const {
     canvasHost,
@@ -527,6 +528,7 @@ export function createGatewayHttpServer(opts: {
             config: openResponsesConfig,
             trustedProxies,
             rateLimiter,
+            gatewayMode: opts.gatewayMode,
           })
         ) {
           return;
