@@ -38,14 +38,53 @@ Tavily supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps to
 
 ## SearXNG (Self-hosted)
 
-[SearXNG](https://github.com/searxng/searxng) is a free, privacy-respecting metasearch engine you can host yourself.
+[SearXNG](https://github.com/searxng/searxng) is a free, privacy-respecting metasearch engine you can host yourself. It is the recommended choice for local or private search workflows.
 
-1. **Self-hosting with Docker:**
-   ```bash
-   docker run -d -p 8080:8080 searxng/searxng
-   ```
-2. **Environment Variable:** (Optional) Set `SEARXNG_API_KEY` if your instance requires authentication.
-3. **Configuration:** Update `~/.openclaw/openclaw.json`:
+### 1. Installation
+
+The easiest way to run SearXNG is using Docker.
+
+#### Basic Run
+
+```bash
+docker run -d -p 8080:8080 --name searxng searxng/searxng
+```
+
+#### Recommended Run (with persistence)
+
+To customize SearXNG settings, mount a local folder for configuration:
+
+```bash
+mkdir -p ./searxng
+docker run -d \
+  -p 8080:8080 \
+  -v $(pwd)/searxng:/etc/searxng \
+  --name searxng \
+  searxng/searxng
+```
+
+### 2. SearXNG Configuration (`settings.yml`)
+
+OpenClaw requires SearXNG to support JSON output. You must enable it in your `settings.yml` (located in `/etc/searxng` inside the container).
+
+```yaml
+# settings.yml
+use_default_settings: true
+
+server:
+  port: 8080
+  bind_address: "0.0.0.0"
+  secret_key: "change_this_to_a_random_string"
+
+search:
+  formats:
+    - html
+    - json # CRITICAL: Must be enabled for OpenClaw
+```
+
+### 3. OpenClaw Configuration
+
+Update your `~/.openclaw/openclaw.json` to point to your instance.
 
 ```json
 {
@@ -53,8 +92,9 @@ Tavily supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps to
     "web": {
       "search": {
         "provider": "searxng",
+        "allowPrivateNetwork": true,
         "searxng": {
-          "baseUrl": "http://localhost:8080"
+          "baseUrl": "http://10.251.1.32:8080"
         }
       }
     }
@@ -62,33 +102,26 @@ Tavily supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps to
 }
 ```
 
-### Local/Private Network Access
+- **`baseUrl`**: Use the IP address or hostname of your SearXNG server. If running on the same machine as OpenClaw, you can use `http://localhost:8080`.
+- **`allowPrivateNetwork`**: Set this to `true` if your SearXNG instance is on a local/private IP (like `10.x.x.x` or `192.168.x.x`) or `localhost`.
 
-If your SearXNG instance is running on `localhost` or a private IP (e.g., `10.x.x.x`), you may need to explicitly allow private network access in your configuration:
+### 4. Troubleshooting
 
-```json
-{
-  "tools": {
-    "web": {
-      "search": {
-        "allowPrivateNetwork": true
-      }
-    }
-  }
-}
-```
+#### 403 Forbidden Error
 
-### Common issues (403 Forbidden)
+If you receive a 403 Forbidden error in Mattermost or other channels, it is likely due to SearXNG's bot-detection (the `limiter` plugin).
 
-SearXNG instances often use bot detection. OpenClaw automatically sends common browser headers (`User-Agent` and `Accept-Language`) to bypass these filters. Ensure your SearXNG `settings.yml` allows `json` as a search format:
+1.  **Check Formats**: Ensure `json` is enabled in `settings.yml`.
+2.  **Limiter Configuration**: If your instance is only for personal use, you can relax the limiter in `settings.yml`:
+    ```yaml
+    enabled_plugins:
+      # - 'Limiter'  # Comment out during testing if you see constant 403s
+    ```
+3.  **Headers**: OpenClaw sends browser-like headers (`User-Agent`, `Accept-Language`, etc.) automatically to help bypass these filters.
 
-```yaml
-# SearXNG settings.yml
-search:
-  formats:
-    - html
-    - json
-```
+#### Freshness Support
+
+SearXNG supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps to its `time_range` filter (`day`, `week`, `month`, `year`).
 
 ## Grok Search (xAI)
 
