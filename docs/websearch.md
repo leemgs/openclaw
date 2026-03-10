@@ -145,11 +145,20 @@ SearXNG supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps t
 }
 ```
 
-## Related documentation
+## Final checklist
 
-- [Web Tools](/tools/web) — Overview of search and fetch tools.
-- [Brave Search setup](/brave-search) — Standard search provider.
-- [Perplexity Sonar](/perplexity) — AI-synthesized search results.
+- Verify `~/.openclaw/openclaw.json` contains the correct `baseUrl` and `allowPrivateNetwork` settings.
+- Ensure SearXNG `settings.yml` has `json` format enabled and, if needed, the limiter plugin disabled.
+- Restart the OpenClaw daemon to apply configuration changes:
+  ```bash
+  pkill -f openclaw
+  pnpm openclaw onboard --install-daemon
+  ```
+- Test a simple search in Mattermost:
+  ```
+  /ask search "내일 대전 날씨" freshness=pd
+  ```
+  If the result appears without a 403 error, the setup is complete.
 
 ## Usage Example
 
