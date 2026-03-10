@@ -737,10 +737,12 @@ async function runSearXNGSearch(params: {
   }
 
   const headers: Record<string, string> = {
-    Accept: "application/json",
+    Accept: "application/json, text/javascript, */*; q=0.01",
     "User-Agent":
       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+    "X-Requested-With": "XMLHttpRequest",
+    Referer: `${params.baseUrl}/`,
   };
   if (params.apiKey) {
     headers["Authorization"] = `Bearer ${params.apiKey}`;
