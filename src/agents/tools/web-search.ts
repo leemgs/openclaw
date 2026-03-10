@@ -536,6 +536,22 @@ function freshnessToSearXNGTimeRange(freshness: string | undefined): string | un
   return map[freshness] ?? undefined;
 }
 
+/**
+ * Map normalized freshness values (pd/pw/pm/py) to Tavily days parameter.
+ */
+function freshnessToTavilyDays(freshness: string | undefined): number | undefined {
+  if (!freshness) {
+    return undefined;
+  }
+  const map: Record<string, number> = {
+    pd: 1,
+    pw: 7,
+    pm: 30,
+    py: 365,
+  };
+  return map[freshness] ?? undefined;
+}
+
 function isValidIsoDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
@@ -672,12 +688,17 @@ async function runTavilySearch(params: {
   apiKey: string;
   timeoutSeconds: number;
   count: number;
+  days?: number;
 }): Promise<TavilySearchResponse> {
   const body: Record<string, unknown> = {
     api_key: params.apiKey,
     query: params.query,
     max_results: params.count,
   };
+
+  if (params.days) {
+    body.days = params.days;
+  }
 
   const res = await fetch(TAVILY_SEARCH_ENDPOINT, {
     method: "POST",
@@ -773,7 +794,7 @@ async function runWebSearch(params: {
       : params.provider === "perplexity"
         ? `${params.provider}:${params.query}:${params.perplexityBaseUrl ?? DEFAULT_PERPLEXITY_BASE_URL}:${params.perplexityModel ?? DEFAULT_PERPLEXITY_MODEL}:${params.freshness || "default"}`
         : params.provider === "tavily"
-          ? `${params.provider}:${params.query}:${params.count}`
+          ? `${params.provider}:${params.query}:${params.count}:${params.freshness || "default"}`
           : params.provider === "searxng"
             ? `${params.provider}:${params.query}:${params.count}:${params.searxngBaseUrl}`
             : `${params.provider}:${params.query}:${params.grokModel ?? DEFAULT_GROK_MODEL}:${String(params.grokInlineCitations ?? false)}`,
@@ -847,6 +868,7 @@ async function runWebSearch(params: {
       apiKey: params.apiKey!,
       timeoutSeconds: params.timeoutSeconds,
       count: params.count,
+      days: freshnessToTavilyDays(params.freshness),
     });
 
     const results = Array.isArray(data.results) ? data.results : [];
@@ -1061,12 +1083,13 @@ export function createWebSearchTool(options?: {
         rawFreshness &&
         provider !== "brave" &&
         provider !== "perplexity" &&
+        provider !== "tavily" &&
         provider !== "searxng"
       ) {
         return jsonResult({
           error: "unsupported_freshness",
           message:
-            "freshness is only supported by the Brave, Perplexity, and SearXNG web_search providers.",
+            "freshness is only supported by the Brave, Perplexity, Tavily, and SearXNG web_search providers.",
           docs: "https://docs.openclaw.ai/tools/web",
         });
       }
@@ -1121,5 +1144,6 @@ export const __testing = {
   extractGrokContent,
   resolveTavilyApiKey,
   resolveTavilyConfig,
+  freshnessToTavilyDays,
   freshnessToSearXNGTimeRange,
 } as const;
