@@ -109,15 +109,86 @@ Update your `~/.openclaw/openclaw.json` to point to your instance.
 
 #### 403 Forbidden Error
 
-If you receive a 403 Forbidden error in Mattermost or other channels, it is likely due to SearXNG's bot-detection (the `limiter` plugin).
+If you receive a 403 Forbidden error (e.g., when asking for weather in Mattermost), it usually indicates that SearXNG's bot-detection or the missing JSON format is blocking the request.
 
-1.  **Check Formats**: Ensure `json` is enabled in `settings.yml`.
-2.  **Limiter Configuration**: If your instance is only for personal use, you can relax the limiter in `settings.yml`:
-    ```yaml
-    enabled_plugins:
-      # - 'Limiter'  # Comment out during testing if you see constant 403s
+**Potential causes:**
+
+- Missing `json` format in `settings.yml`.
+- Server-side restrictions (rate limiting, IP blocking via the `Limiter` plugin).
+- Misconfigured SearXNG instance.
+
+##### Resolution Method 1: Modify inside the running container
+
+1.  **Identify the container:**
+    ```bash
+    docker ps | grep searxng
     ```
-3.  **Headers**: OpenClaw sends browser-like headers (`User-Agent`, `Accept-Language`, etc.) automatically to help bypass these filters.
+2.  **Enter the container:**
+    ```bash
+    docker exec -it {container_name} sh
+    ```
+3.  **Locate and edit `settings.yml`:**
+
+    ```bash
+    find / -name "settings.yml" 2>/dev/null
+    vi /etc/searxng/settings.yml
+    ```
+
+    Add `json` to `formats` and comment out the `Limiter` if you are on a private network:
+
+    ```yaml
+    search:
+      formats:
+        - html
+        - json # ← Add this
+
+    enabled_plugins:
+      # - 'Limiter' # ← Comment out for personal/private instances
+      - "Basic Calculator"
+      - "Hash plugin"
+    ```
+
+    > [!WARNING]
+    > For public instances, keep the `Limiter` enabled. Only disable it for internal or private network use.
+
+4.  **Restart the container:**
+    ```bash
+    exit
+    docker restart {container_name}
+    ```
+
+##### Resolution Method 2: Volume Mounting (Recommended)
+
+Mount a host-side `settings.yml` to ensure settings persist after container updates or removals.
+
+1.  **Copy the config from the container:**
+    ```bash
+    docker cp {container_id}:/etc/searxng/settings.yml ~/searxng-settings.yml
+    ```
+2.  **Edit the file on your host:**
+    Add `json` to `formats` and disable `Limiter` as described in Method 1.
+3.  **Restart with the volume mount:**
+    ```bash
+    docker stop searxng
+    docker rm searxng
+    docker run -d \
+      --name searxng \
+      -p 8080:8080 \
+      -v ~/searxng-settings.yml:/etc/searxng/settings.yml \
+      searxng/searxng
+    ```
+
+##### Verify the fix (curl)
+
+Verify that the JSON endpoint works manually:
+
+```bash
+curl -X GET "http://localhost:8080/search?q=test&format=json" \
+  -H "User-Agent: Mozilla/5.0" \
+  -H "Accept-Language: ko-KR,ko;q=0.9"
+```
+
+If you receive a JSON response, the configuration is correct. If you still see a 403, re-examine `settings.yml`.
 
 #### Freshness Support
 
