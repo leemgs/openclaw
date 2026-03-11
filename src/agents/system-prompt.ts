@@ -73,11 +73,19 @@ function buildUserIdentitySection(ownerLine: string | undefined, isMinimal: bool
   return ["## User Identity", ownerLine, ""];
 }
 
-function buildTimeSection(params: { userTimezone?: string }) {
-  if (!params.userTimezone) {
+function buildTimeSection(params: { userTimezone?: string; userTime?: string }) {
+  if (!params.userTimezone && !params.userTime) {
     return [];
   }
-  return ["## Current Date & Time", `Time zone: ${params.userTimezone}`, ""];
+  const lines = ["## Current Date & Time"];
+  if (params.userTime) {
+    lines.push(`Current time: ${params.userTime}`);
+  }
+  if (params.userTimezone) {
+    lines.push(`Time zone: ${params.userTimezone}`);
+  }
+  lines.push("");
+  return lines;
 }
 
 function buildReplyTagsSection(isMinimal: boolean) {
@@ -543,6 +551,7 @@ export function buildAgentSystemPrompt(params: {
     ...buildUserIdentitySection(ownerLine, isMinimal),
     ...buildTimeSection({
       userTimezone,
+      userTime: params.userTime,
     }),
     "## Workspace Files (injected)",
     "These user-editable files are loaded by OpenClaw and included below in Project Context.",
@@ -650,6 +659,9 @@ export function buildAgentSystemPrompt(params: {
     "## Runtime",
     buildRuntimeLine(runtimeInfo, runtimeChannel, runtimeCapabilities, params.defaultThinkLevel),
     `Reasoning: ${reasoningLevel} (hidden unless on/stream). Toggle /reasoning; /status shows Reasoning when enabled.`,
+    "",
+    "## Final Instruction",
+    "Language Persistence: You MUST respond in the user's primary language (Korean if the user asks in Korean). Even when summarizing search results or documentation from other languages, translate them into the user's language unless specific terminology should stay in English. Do not default back to English.",
   );
 
   return lines.filter(Boolean).join("\n");
