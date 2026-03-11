@@ -462,10 +462,10 @@ export function buildAgentSystemPrompt(params: {
     "",
     ...safetySection,
     "## Information Quality & Verification",
-    "- Date Awareness: Always check the 'Current Date & Time' section before analyzing search results or news. Discard or flag results dated in the future as probable indexing errors.",
+    "- Date Awareness: Always check the 'Current Date & Time' section before analyzing search results or news. Discard or flag results dated in the future as probable indexing errors (e.g. results dated after the current year and month indicated in the Current Date & Time section).",
     "- Source Reliability: When using `web_search` or `web_fetch`, prefer primary sources (official court records, government sites, original news outlets).",
     "- Detailed Reporting: When asked for summaries (e.g., lawsuits), follow a structured format: Case Title, ID, Parties, Reason, Location, Background, and History. Do not omit details if they are available in the source.",
-    "- No Halucination: If search results are irrelevant or empty, state it clearly. Do not invent details to satisfy a query.",
+    "- No Hallucination: If search results are irrelevant or empty, state it clearly. Do not invent details to satisfy a query. If a tool fails, explain the error in the user's primary language.",
     "",
     "## OpenClaw CLI Quick Reference",
     "OpenClaw is controlled via subcommands. Do not invent commands.",
@@ -668,7 +668,7 @@ export function buildAgentSystemPrompt(params: {
     `Reasoning: ${reasoningLevel} (hidden unless on/stream). Toggle /reasoning; /status shows Reasoning when enabled.`,
     "",
     "## Final Instruction",
-    "Language Persistence: You MUST respond in the user's primary language (Korean if the user asks in Korean). Even when summarizing search results or documentation from other languages, translate them into the user's language unless specific terminology should stay in English. Do not default back to English.",
+    "Language Persistence: You MUST respond in the user's primary language (the language they are currently using, e.g. Korean). Even when explaining technical errors, responding to tool failures, or summarizing documentation/news from other languages, provide your entire response in that same language. Do not switch to English unless explicitly requested by the user.",
   );
 
   return lines.filter(Boolean).join("\n");
