@@ -30,7 +30,13 @@ function canonicalizeToolGatewayWsUrl(raw: string): { origin: string; key: strin
   }
 
   if (url.protocol !== "ws:" && url.protocol !== "wss:") {
-    throw new Error(`invalid gatewayUrl protocol: ${url.protocol} (expected ws:// or wss://)`);
+    if (url.protocol === "http:") {
+      url.protocol = "ws:";
+    } else if (url.protocol === "https:") {
+      url.protocol = "wss:";
+    } else {
+      throw new Error(`invalid gatewayUrl protocol: ${url.protocol} (expected ws:// or wss://)`);
+    }
   }
   if (url.username || url.password) {
     throw new Error("invalid gatewayUrl: credentials are not allowed");
