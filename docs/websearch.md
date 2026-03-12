@@ -190,9 +190,12 @@ curl -X GET "http://localhost:8080/search?q=test&format=json" \
 
 If you receive a JSON response, the configuration is correct. If you still see a 403, re-examine `settings.yml`.
 
-#### Freshness Support
+#### Freshness & Language Support
 
-SearXNG supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps to its `time_range` filter (`day`, `week`, `month`, `year`).
+SearXNG supports:
+
+- **`freshness`**: Values (`pd`, `pw`, `pm`, `py`) map to SearXNG's `time_range` filter (`day`, `week`, `month`, `year`).
+- **`language`**: ISO 639-1 language codes (e.g., `ko`, `en`, `de`) to filter results by language.
 
 ## Perplexity / OpenRouter
 
