@@ -93,14 +93,14 @@ describe("web_search perplexity compatibility routing", () => {
     });
   });
 
-  it("treats unrecognized configured keys as direct Perplexity by default", () => {
+  it("treats unrecognized configured keys as OpenRouter by default", () => {
     expect(
       resolvePerplexityTransport({
         apiKey: enterprisePerplexityApiKey,
       }),
     ).toMatchObject({
-      baseUrl: "https://api.perplexity.ai",
-      transport: "search_api",
+      baseUrl: "https://openrouter.ai/api/v1",
+      transport: "chat_completions",
     });
   });
 
