@@ -295,6 +295,34 @@ OpenClaw uses device identity to secure the connection between your browser and 
 > [!WARNING]
 > Disabling device auth or allowing insecure auth exposes your gateway to potential session hijacking. Only use these settings on trusted private networks.
 
+#### Plaintext WebSocket blocked on Private Network
+
+**Error:** `SECURITY ERROR: Gateway URL "ws://..." uses plaintext ws:// to a non-loopback address.`
+
+신뢰할 수 있는 사설 네트워크(LAN) 환경에서 기존처럼 사용하시려면, 환경 변수를 통해 이 보안 체크를 일시적으로 허용해야 합니다.
+
+터미널에서 다음과 같이 명령어를 실행해 보세요:
+
+```bash
+# 보안 체크 우회 옵션을 켜고 온보딩 실행
+export OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1
+pnpm openclaw onboard --install-daemon
+```
+
+또는 한 줄로 실행:
+
+```bash
+OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 pnpm openclaw onboard --install-daemon
+```
+
+**요약**
+
+- **원인**: `bind: "lan"` 설정으로 인해 사설 IP를 사용하는데, 강화된 보안 정책이 `ws://` (평문) 연결을 차단함.
+- **결과**: 게이트웨이 연결 실패로 인식되어 TUI/WEB 선택 메뉴가 스킵됨.
+- **해결**: `OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1` 환경 변수를 설정하여 보안 경고를 수동으로 허용.
+
+이렇게 실행하시면 다시 TUI/WEB 선택 메뉴가 나타날 것입니다.
+
 ## Final checklist
 
 - Verify `~/.openclaw/openclaw.json` contains the correct `baseUrl` and `allowPrivateNetwork` settings.
