@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import * as logger from "../../logger.js";
+import { withFetchPreconnect } from "../../test-utils/fetch-mock.js";
 import {
   createBaseWebFetchToolConfig,
   installWebFetchSsrfHarness,
@@ -37,7 +38,7 @@ function htmlResponse(body: string): Response {
 describe("web_fetch Cloudflare Markdown for Agents", () => {
   it("sends Accept header preferring text/markdown", async () => {
     const fetchSpy = vi.fn().mockResolvedValue(markdownResponse("# Test Page\n\nHello world."));
-    global.fetch = fetchSpy;
+    global.fetch = withFetchPreconnect(fetchSpy);
 
     const tool = createWebFetchTool(baseToolConfig);
 
@@ -51,7 +52,7 @@ describe("web_fetch Cloudflare Markdown for Agents", () => {
   it("uses cf-markdown extractor for text/markdown responses", async () => {
     const md = "# CF Markdown\n\nThis is server-rendered markdown.";
     const fetchSpy = vi.fn().mockResolvedValue(markdownResponse(md));
-    global.fetch = fetchSpy;
+    global.fetch = withFetchPreconnect(fetchSpy);
 
     const tool = createWebFetchTool(baseToolConfig);
 
@@ -73,7 +74,7 @@ describe("web_fetch Cloudflare Markdown for Agents", () => {
     const html =
       "<html><body><article><h1>HTML Page</h1><p>Content here.</p></article></body></html>";
     const fetchSpy = vi.fn().mockResolvedValue(htmlResponse(html));
-    global.fetch = fetchSpy;
+    global.fetch = withFetchPreconnect(fetchSpy);
 
     const tool = createWebFetchTool(baseToolConfig);
 
@@ -83,12 +84,53 @@ describe("web_fetch Cloudflare Markdown for Agents", () => {
     expect(details?.contentType).toBe("text/html");
   });
 
+  it("bypasses Firecrawl when runtime metadata marks Firecrawl inactive", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValue(
+        htmlResponse(
+          "<html><body><article><h1>Runtime Off</h1><p>Use direct fetch.</p></article></body></html>",
+        ),
+      );
+    global.fetch = withFetchPreconnect(fetchSpy);
+
+    const tool = createWebFetchTool({
+      config: {
+        tools: {
+          web: {
+            fetch: {
+              firecrawl: {
+                enabled: true,
+                apiKey: {
+                  source: "env",
+                  provider: "default",
+                  id: "MISSING_FIRECRAWL_KEY_REF",
+                },
+              },
+            },
+          },
+        },
+      },
+      sandboxed: false,
+      runtimeFirecrawl: {
+        active: false,
+        apiKeySource: "secretRef", // pragma: allowlist secret
+        diagnostics: [],
+      },
+    });
+
+    await tool?.execute?.("call", { url: "https://example.com/runtime-firecrawl-off" });
+
+    expect(fetchSpy).toHaveBeenCalled();
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://example.com/runtime-firecrawl-off");
+  });
+
   it("logs x-markdown-tokens when header is present", async () => {
     const logSpy = vi.spyOn(logger, "logDebug").mockImplementation(() => {});
     const fetchSpy = vi
       .fn()
       .mockResolvedValue(markdownResponse("# Tokens Test", { "x-markdown-tokens": "1500" }));
-    global.fetch = fetchSpy;
+    global.fetch = withFetchPreconnect(fetchSpy);
 
     const tool = createWebFetchTool(baseToolConfig);
 
@@ -108,7 +150,7 @@ describe("web_fetch Cloudflare Markdown for Agents", () => {
   it("converts markdown to text when extractMode is text", async () => {
     const md = "# Heading\n\n**Bold text** and [a link](https://example.com).";
     const fetchSpy = vi.fn().mockResolvedValue(markdownResponse(md));
-    global.fetch = fetchSpy;
+    global.fetch = withFetchPreconnect(fetchSpy);
 
     const tool = createWebFetchTool(baseToolConfig);
 
@@ -132,7 +174,7 @@ describe("web_fetch Cloudflare Markdown for Agents", () => {
   it("does not log x-markdown-tokens when header is absent", async () => {
     const logSpy = vi.spyOn(logger, "logDebug").mockImplementation(() => {});
     const fetchSpy = vi.fn().mockResolvedValue(markdownResponse("# No tokens"));
-    global.fetch = fetchSpy;
+    global.fetch = withFetchPreconnect(fetchSpy);
 
     const tool = createWebFetchTool(baseToolConfig);
 

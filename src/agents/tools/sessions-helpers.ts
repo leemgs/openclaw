@@ -15,6 +15,7 @@ export {
 export type { SessionReferenceResolution } from "./sessions-resolution.js";
 export {
   isRequesterSpawnedSessionVisible,
+  isResolvedSessionVisibleToRequester,
   listSpawnedSessionKeys,
   looksLikeSessionId,
   looksLikeSessionKey,
@@ -22,13 +23,16 @@ export {
   resolveInternalSessionKey,
   resolveMainSessionAlias,
   resolveSessionReference,
+  resolveVisibleSessionReference,
   shouldResolveSessionIdInput,
+  shouldVerifyRequesterSpawnedSessionVisibility,
 } from "./sessions-resolution.js";
 import { extractTextFromChatContent } from "../../shared/chat-content.js";
 import { sanitizeUserFacingText } from "../pi-embedded-helpers.js";
 import {
   stripDowngradedToolCallText,
   stripMinimaxToolCallXml,
+  stripModelSpecialTokens,
   stripThinkingTagsFromText,
 } from "../pi-embedded-utils.js";
 
@@ -127,7 +131,7 @@ export function stripToolMessages(messages: unknown[]): unknown[] {
       return true;
     }
     const role = (msg as { role?: unknown }).role;
-    return role !== "toolResult";
+    return role !== "toolResult" && role !== "tool";
   });
 }
 
@@ -139,7 +143,9 @@ export function sanitizeTextContent(text: string): string {
   if (!text) {
     return text;
   }
-  return stripThinkingTagsFromText(stripDowngradedToolCallText(stripMinimaxToolCallXml(text)));
+  return stripThinkingTagsFromText(
+    stripDowngradedToolCallText(stripModelSpecialTokens(stripMinimaxToolCallXml(text))),
+  );
 }
 
 export function extractAssistantText(message: unknown): string | undefined {
