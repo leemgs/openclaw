@@ -223,7 +223,15 @@ function createWebSearchSchema(params: {
     ),
   } as const;
 
-  const filterSchema = {
+  const freshnessFilterSchema = {
+    freshness: Type.Optional(
+      Type.String({
+        description: "Filter by time: 'day' (24h), 'week', 'month', or 'year'.",
+      }),
+    ),
+  } as const;
+
+  const geoFilterSchema = {
     country: Type.Optional(
       Type.String({
         description:
@@ -235,11 +243,9 @@ function createWebSearchSchema(params: {
         description: "ISO 639-1 language code for results (e.g., 'en', 'de', 'fr').",
       }),
     ),
-    freshness: Type.Optional(
-      Type.String({
-        description: "Filter by time: 'day' (24h), 'week', 'month', or 'year'.",
-      }),
-    ),
+  } as const;
+
+  const dateFilterSchema = {
     date_after: Type.Optional(
       Type.String({
         description: "Only results published after this date (YYYY-MM-DD).",
@@ -269,12 +275,14 @@ function createWebSearchSchema(params: {
       Type.String({
         description:
           "Native Perplexity Search API only. Only results published after this date (YYYY-MM-DD).",
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$",
       }),
     ),
     date_before: Type.Optional(
       Type.String({
         description:
           "Native Perplexity Search API only. Only results published before this date (YYYY-MM-DD).",
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$",
       }),
     ),
   } as const;
@@ -282,7 +290,9 @@ function createWebSearchSchema(params: {
   if (params.provider === "brave") {
     return Type.Object({
       ...querySchema,
-      ...filterSchema,
+      ...geoFilterSchema,
+      ...freshnessFilterSchema,
+      ...dateFilterSchema,
       search_lang: Type.Optional(
         Type.String({
           description:
@@ -302,12 +312,12 @@ function createWebSearchSchema(params: {
     if (params.perplexityTransport === "chat_completions") {
       return Type.Object({
         ...querySchema,
-        freshness: filterSchema.freshness,
+        ...freshnessFilterSchema,
       });
     }
     return Type.Object({
       ...querySchema,
-      freshness: filterSchema.freshness,
+      ...freshnessFilterSchema,
       ...perplexityStructuredFilterSchema,
       domain_filter: Type.Optional(
         Type.Array(Type.String(), {
@@ -333,10 +343,24 @@ function createWebSearchSchema(params: {
     });
   }
 
-  // grok, gemini, kimi, tavily, searxng
+  if (params.provider === "searxng") {
+    return Type.Object({
+      ...querySchema,
+      ...freshnessFilterSchema,
+      language: geoFilterSchema.language,
+    });
+  }
+
+  if (params.provider === "tavily") {
+    return Type.Object({
+      ...querySchema,
+      ...freshnessFilterSchema,
+    });
+  }
+
+  // grok, gemini, kimi
   return Type.Object({
     ...querySchema,
-    ...filterSchema,
   });
 }
 
@@ -1822,6 +1846,7 @@ async function runSearXNGSearch(params: {
   count: number;
   allowPrivateNetwork?: boolean;
   freshness?: string;
+  language?: string;
 }): Promise<SearXNGSearchResponse> {
   const url = new URL(`${params.baseUrl}/search`);
   url.searchParams.set("q", params.query);
@@ -1830,6 +1855,9 @@ async function runSearXNGSearch(params: {
   const timeRange = freshnessToSearXNGTimeRange(params.freshness);
   if (timeRange) {
     url.searchParams.set("time_range", timeRange);
+  }
+  if (params.language) {
+    url.searchParams.set("language", params.language);
   }
 
   const headers: Record<string, string> = {
@@ -2073,6 +2101,7 @@ async function runWebSearch(params: {
       count: params.count,
       allowPrivateNetwork: params.allowPrivateNetwork,
       freshness: params.freshness,
+      language: params.language,
     });
 
     const results = Array.isArray(data.results) ? data.results : [];
@@ -2394,6 +2423,7 @@ export function createWebSearchTool(options?: {
       if (
         language &&
         provider !== "brave" &&
+        provider !== "searxng" &&
         !(provider === "perplexity" && supportsStructuredPerplexityFilters)
       ) {
         return jsonResult({
@@ -2401,7 +2431,7 @@ export function createWebSearchTool(options?: {
           message:
             provider === "perplexity"
               ? "language filtering is only supported by the native Perplexity Search API path. Remove Perplexity baseUrl/model overrides or use a direct PERPLEXITY_API_KEY to enable it."
-              : `language filtering is not supported by the ${provider} provider. Only Brave and Perplexity support language filtering.`,
+              : `language filtering is not supported by the ${provider} provider. Only Brave, Perplexity, and SearXNG support language filtering.`,
           docs: "https://docs.openclaw.ai/tools/web",
         });
       }
