@@ -194,6 +194,36 @@ If you receive a JSON response, the configuration is correct. If you still see a
 
 SearXNG supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps to its `time_range` filter (`day`, `week`, `month`, `year`).
 
+## Perplexity / OpenRouter
+
+OpenClaw supports [Perplexity AI](https://www.perplexity.ai/) for web search. It can connect directly to Perplexity's API or via [OpenRouter](https://openrouter.ai/).
+
+- **Default:** If the API key is unrecognized or missing, OpenClaw defaults to **OpenRouter** (`https://openrouter.ai/api/v1`).
+- **Direct Perplexity:** API keys starting with `pplx-` are automatically routed to `https://api.perplexity.ai`.
+- **OpenRouter:** API keys starting with `sk-or-` are routed to OpenRouter.
+
+### Configuration
+
+```json
+{
+  "tools": {
+    "web": {
+      "search": {
+        "provider": "perplexity",
+        "perplexity": {
+          "apiKey": "pplx-your-perplexity-key",
+          "model": "sonar-pro"
+        }
+      }
+    }
+  }
+}
+```
+
+- **`apiKey`**: Your Perplexity or OpenRouter key.
+- **`baseUrl`**: (Optional) Override the default API endpoint.
+- **`model`**: (Optional) Defaults to `sonar-pro`.
+
 ## Grok Search (xAI)
 
 [xAI Grok](https://x.ai/) provides a web search tool via the Responses API.
@@ -215,6 +245,55 @@ SearXNG supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps t
   }
 }
 ```
+
+### Gateway & Authentication Errors
+
+While configuring web search, you may encounter gateway-level security errors if your connection is not properly authorized or secured.
+
+#### Origin not allowed
+
+**Error:** `origin not allowed (open the Control UI from the gateway host or allow it in gateway.controlUi.allowedOrigins)`
+
+This happens when you try to access the OpenClaw Control UI from a browser on a different machine or IP that isn't in the allowlist.
+
+**Resolution:**
+Update `gateway.controlUi.allowedOrigins` in your `openclaw.json` to include the IP address of the machine you are browsing from, or use `"*"` to allow any origin (not recommended for public networks).
+
+```json
+{
+  "gateway": {
+    "controlUi": {
+      "allowedOrigins": ["http://10.251.1.32:18789", "http://your-client-ip:port"]
+    }
+  }
+}
+```
+
+#### Device identity required
+
+**Error:** `device identity required` or `control ui requires device identity (use HTTPS or localhost secure context)`
+
+OpenClaw uses device identity to secure the connection between your browser and the gateway. This requires a **Secure Context** (HTTPS or `localhost`) for the browser's cryptographic APIs to work.
+
+**Resolution:**
+
+1.  **Use Localhost:** Access the UI via `http://localhost:18789` if the gateway is running on the same machine.
+2.  **Use HTTPS:** Set up a reverse proxy with TLS (e.g., Nginx, Caddy) to serve the gateway over HTTPS.
+3.  **Insecure Auth (Advanced):** If you must use HTTP on a private network, you can enable insecure auth (not recommended):
+
+```json
+{
+  "gateway": {
+    "controlUi": {
+      "allowInsecureAuth": true,
+      "dangerouslyDisableDeviceAuth": true
+    }
+  }
+}
+```
+
+> [!WARNING]
+> Disabling device auth or allowing insecure auth exposes your gateway to potential session hijacking. Only use these settings on trusted private networks.
 
 ## Final checklist
 
