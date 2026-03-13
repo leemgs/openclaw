@@ -326,6 +326,22 @@ OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 pnpm openclaw onboard --install-daemon
 
 이렇게 실행하시면 다시 TUI/WEB 선택 메뉴가 나타날 것입니다.
 
+## Mattermost Configuration
+
+To use web search directly from Mattermost, ensure your channel is configured in `~/.openclaw/openclaw.json`:
+
+```json
+{
+  "channels": {
+    "mattermost": {
+      "botToken": "mm-token-1234",
+      "baseUrl": "https://chat.example.com",
+      "defaultTo": "@myusername" // Fixed target for Cron Jobs
+    }
+  }
+}
+```
+
 ## Final checklist
 
 - Verify `~/.openclaw/openclaw.json` contains the correct `baseUrl` and `allowPrivateNetwork` settings.
