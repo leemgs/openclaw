@@ -379,6 +379,7 @@ Details: [Security guide](https://docs.openclaw.ai/gateway/security) · [Docker 
     mattermost: {
       botToken: "mm-token-1234",
       baseUrl: "https://chat.example.com",
+      defaultTo: "@myusername",
     },
   },
 }

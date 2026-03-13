@@ -50,6 +50,7 @@ Minimal config:
       botToken: "mm-token",
       baseUrl: "https://chat.example.com",
       dmPolicy: "pairing",
+      defaultTo: "@myusername",
     },
   },
 }
@@ -113,6 +114,14 @@ Use these target formats with `openclaw message send` or cron/webhooks:
 - `@username` for a DM (resolved via the Mattermost API)
 
 Bare IDs are treated as channels.
+
+### Default delivery target
+
+Configuration: `channels.mattermost.defaultTo`
+
+If a delivery target (like `to`) is not provided for outbound messages (common in Cron Jobs), OpenClaw will use `defaultTo` as the fallback target. This is useful for scheduled jobs that should always deliver to a specific channel or user.
+
+Example: `defaultTo: "@myusername"` or `defaultTo: "channel:xyz123"`
 
 ## Multi-account
 
