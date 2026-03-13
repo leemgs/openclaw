@@ -1,21 +1,21 @@
 ---
-summary: "Web search configuration for Tavily, SearXNG, and Grok"
+summary: "Tavily, SearXNG, Grok을 위한 웹 검색 설정"
 read_when:
-  - You want to use Tavily or Grok for web search
-  - You want to set up a self-hosted SearXNG instance
-title: "Web Search Providers"
+  - Tavily 또는 Grok을 웹 검색에 사용하고 싶을 때
+  - 자체 호스팅 SearXNG 인스턴스를 설정하고 싶을 때
+title: "웹 검색 프로바이더"
 ---
 
-# Web search providers
+# 웹 검색 프로바이더 (Web search providers)
 
-OpenClaw supports multiple web search providers via the `web_search` tool. You can configure them in `~/.openclaw/openclaw.json` or using environment variables.
+OpenClaw는 `web_search` 도구를 통해 여러 웹 검색 프로바이더를 지원합니다. `~/.openclaw/openclaw.json` 파일 또는 환경 변수를 통해 설정할 수 있습니다.
 
 ## Tavily
 
-[Tavily](https://tavily.com/) is a search engine optimized for AI agents.
+[Tavily](https://tavily.com/)는 AI 에이전트 최적화 검색 엔진입니다.
 
-1. **Environment Variable:** Set `TAVILY_API_KEY` in your environment.
-2. **Configuration:** Update `~/.openclaw/openclaw.json`:
+1. **환경 변수:** 환경 변수에 `TAVILY_API_KEY`를 설정하세요.
+2. **설정:** `~/.openclaw/openclaw.json`을 업데이트하세요:
 
 ```json
 {
@@ -32,27 +32,27 @@ OpenClaw supports multiple web search providers via the `web_search` tool. You c
 }
 ```
 
-### Freshness support
+### 최신성 지원
 
-Tavily supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps to its `days` parameter (1, 7, 30, and 365 days respectively) to filter for recent content.
+Tavily는 `freshness` 파라미터(`pd`, `pw`, `pm`, `py`)를 지원하며, 이는 각각 Tavily의 `days` 파라미터(1일, 7일, 30일, 365일)로 매핑되어 최신 콘텐츠를 필터링합니다.
 
-## SearXNG (Self-hosted)
+## SearXNG (자체 호스팅)
 
-[SearXNG](https://github.com/searxng/searxng) is a free, privacy-respecting metasearch engine you can host yourself. It is the recommended choice for local or private search workflows.
+[SearXNG](https://github.com/searxng/searxng)는 직접 호스팅할 수 있는 무료이며 개인정보를 보호하는 메타 검색 엔진입니다. 로컬 또는 비공개 검색 워크플로우를 위해 권장되는 선택입니다.
 
-### 1. Installation
+### 1. 설치
 
-The easiest way to run SearXNG is using Docker.
+SearXNG를 실행하는 가장 쉬운 방법은 Docker를 사용하는 것입니다.
 
-#### Basic Run
+#### 기본 실행
 
 ```bash
 docker run -d -p 8080:8080 --name searxng searxng/searxng
 ```
 
-#### Recommended Run (with persistence)
+#### 권장 실행 (데이터 유지)
 
-To customize SearXNG settings, mount a local folder for configuration:
+SearXNG 설정을 커스터마이징하려면 설정 파일을 위한 로컬 폴더를 마운트하세요:
 
 ```bash
 mkdir -p ./searxng
@@ -63,9 +63,9 @@ docker run -d \
   searxng/searxng
 ```
 
-### 2. SearXNG Configuration (`settings.yml`)
+### 2. SearXNG 설정 (`settings.yml`)
 
-OpenClaw requires SearXNG to support JSON output. You must enable it in your `settings.yml` (located in `/etc/searxng` inside the container).
+OpenClaw는 SearXNG가 JSON 출력을 지원해야 합니다. `settings.yml`(컨테이너 내부의 `/etc/searxng`에 위치)에서 이를 활성화해야 합니다.
 
 ```yaml
 # settings.yml
@@ -74,17 +74,17 @@ use_default_settings: true
 server:
   port: 8080
   bind_address: "0.0.0.0"
-  secret_key: "change_this_to_a_random_string"
+  secret_key: "random_string으로_변경하세요"
 
 search:
   formats:
     - html
-    - json # CRITICAL: Must be enabled for OpenClaw
+    - json # 중요: OpenClaw를 위해 반드시 활성화해야 함
 ```
 
-### 3. OpenClaw Configuration
+### 3. OpenClaw 설정
 
-Update your `~/.openclaw/openclaw.json` to point to your instance.
+`~/.openclaw/openclaw.json`을 업데이트하여 인스턴스를 가리키도록 하세요.
 
 ```json
 {
@@ -102,72 +102,72 @@ Update your `~/.openclaw/openclaw.json` to point to your instance.
 }
 ```
 
-- **`baseUrl`**: Use the IP address or hostname of your SearXNG server. If running on the same machine as OpenClaw, you can use `http://localhost:8080`.
-- **`allowPrivateNetwork`**: Set this to `true` if your SearXNG instance is on a local/private IP (like `10.x.x.x` or `192.168.x.x`) or `localhost`.
+- **`baseUrl`**: SearXNG 서버의 IP 주소 또는 호스트네임을 사용하세요. OpenClaw와 같은 머신에서 실행 중이라면 `http://localhost:8080`을 사용할 수 있습니다.
+- **`allowPrivateNetwork`**: SearXNG 인스턴스가 로컬/사설 IP(`10.x.x.x` 또는 `192.168.x.x`) 또는 `localhost`에 있는 경우 이를 `true`로 설정하세요.
 
-### 4. Troubleshooting
+### 4. 문제 해결
 
-#### 403 Forbidden Error
+#### 403 Forbidden 오류
 
-If you receive a 403 Forbidden error (e.g., when asking for weather in Mattermost), it usually indicates that SearXNG's bot-detection or the missing JSON format is blocking the request.
+403 Forbidden 오류가 발생하는 경우(예: Mattermost에서 날씨를 물어볼 때), 보통 SearXNG의 봇 감지 기능이나 JSON 형식이 누락되어 요청이 차단되었음을 의미합니다.
 
-**Potential causes:**
+**잠재적 원인:**
 
-- Missing `json` format in `settings.yml`.
-- Server-side restrictions (rate limiting, IP blocking via the `Limiter` plugin).
-- Misconfigured SearXNG instance.
+- `settings.yml`에 `json` 형식이 누락됨.
+- 서버 측 제한 (속도 제한, `Limiter` 플러그인을 통한 IP 차단).
+- SearXNG 인스턴스 설정 오류.
 
-##### Resolution Method 1: Modify inside the running container
+##### 해결 방법 1: 실행 중인 컨테이너 내부에서 수정
 
-1.  **Identify the container:**
+1.  **컨테이너 확인:**
     ```bash
     docker ps | grep searxng
     ```
-2.  **Enter the container:**
+2.  **컨테이너 진입:**
     ```bash
     docker exec -it {container_name} sh
     ```
-3.  **Locate and edit `settings.yml`:**
+3.  **`settings.yml` 위치 확인 및 수정:**
 
     ```bash
     find / -name "settings.yml" 2>/dev/null
     vi /etc/searxng/settings.yml
     ```
 
-    Add `json` to `formats` and comment out the `Limiter` if you are on a private network:
+    `formats`에 `json`을 추가하고, 사설 네트워크에 있는 경우 `Limiter`를 주석 처리하세요:
 
     ```yaml
     search:
       formats:
         - html
-        - json # ← Add this
+        - json # ← 추가
 
     enabled_plugins:
-      # - 'Limiter' # ← Comment out for personal/private instances
+      # - 'Limiter' # ← 개인/사설 인스턴스의 경우 주석 처리
       - "Basic Calculator"
       - "Hash plugin"
     ```
 
     > [!WARNING]
-    > For public instances, keep the `Limiter` enabled. Only disable it for internal or private network use.
+    > 공개 인스턴스의 경우 `Limiter`를 활성화된 상태로 유지하세요. 내부 또는 사설 네트워크 사용 시에만 비활성화하세요.
 
-4.  **Restart the container:**
+4.  **컨테이너 재시작:**
     ```bash
     exit
     docker restart {container_name}
     ```
 
-##### Resolution Method 2: Volume Mounting (Recommended)
+##### 해결 방법 2: 볼륨 마운트 (권장)
 
-Mount a host-side `settings.yml` to ensure settings persist after container updates or removals.
+컨테이너 업데이트 또는 삭제 후에도 설정이 유지되도록 호스트 측의 `settings.yml`을 마운트하세요.
 
-1.  **Copy the config from the container:**
+1.  **컨테이너에서 설정 복사:**
     ```bash
     docker cp {container_id}:/etc/searxng/settings.yml ~/searxng-settings.yml
     ```
-2.  **Edit the file on your host:**
-    Add `json` to `formats` and disable `Limiter` as described in Method 1.
-3.  **Restart with the volume mount:**
+2.  **호스트에서 파일 수정:**
+    방법 1에서 설명한 대로 `formats`에 `json`을 추가하고 `Limiter`를 비활성화하세요.
+3.  **볼륨 마운트와 함께 재시작:**
     ```bash
     docker stop searxng
     docker rm searxng
@@ -178,9 +178,9 @@ Mount a host-side `settings.yml` to ensure settings persist after container upda
       searxng/searxng
     ```
 
-##### Verify the fix (curl)
+##### 수정 확인 (curl)
 
-Verify that the JSON endpoint works manually:
+JSON 엔드포인트가 수동으로 작동하는지 확인하세요:
 
 ```bash
 curl -X GET "http://localhost:8080/search?q=test&format=json" \
@@ -188,24 +188,24 @@ curl -X GET "http://localhost:8080/search?q=test&format=json" \
   -H "Accept-Language: ko-KR,ko;q=0.9"
 ```
 
-If you receive a JSON response, the configuration is correct. If you still see a 403, re-examine `settings.yml`.
+JSON 응답이 오면 구성이 올바른 것입니다. 여전히 403이 나타나면 `settings.yml`을 다시 확인하세요.
 
-#### Freshness & Language Support
+#### 최신성 및 언어 지원
 
-SearXNG supports:
+SearXNG는 다음을 지원합니다:
 
-- **`freshness`**: Values (`pd`, `pw`, `pm`, `py`) map to SearXNG's `time_range` filter (`day`, `week`, `month`, `year`).
-- **`language`**: ISO 639-1 language codes (e.g., `ko`, `en`, `de`) to filter results by language.
+- **`freshness`**: 값(`pd`, `pw`, `pm`, `py`)이 SearXNG의 `time_range` 필터(`day`, `week`, `month`, `year`)로 매핑됩니다.
+- **`language`**: 결과 언어를 필터링하기 위한 ISO 639-1 언어 코드(예: `ko`, `en`, `de`)입니다.
 
 ## Perplexity / OpenRouter
 
-OpenClaw supports [Perplexity AI](https://www.perplexity.ai/) for web search. It can connect directly to Perplexity's API or via [OpenRouter](https://openrouter.ai/).
+OpenClaw는 웹 검색을 위해 [Perplexity AI](https://www.perplexity.ai/)를 지원합니다. Perplexity의 API에 직접 연결하거나 [OpenRouter](https://openrouter.ai/)를 통해 연결할 수 있습니다.
 
-- **Default:** If the API key is unrecognized or missing, OpenClaw defaults to **OpenRouter** (`https://openrouter.ai/api/v1`).
-- **Direct Perplexity:** API keys starting with `pplx-` are automatically routed to `https://api.perplexity.ai`.
-- **OpenRouter:** API keys starting with `sk-or-` are routed to OpenRouter.
+- **기본값:** API 키를 인식할 수 없거나 없는 경우 OpenClaw는 기본적으로 **OpenRouter**(`https://openrouter.ai/api/v1`)를 사용합니다.
+- **직접 Perplexity:** `pplx-`로 시작하는 API 키는 자동으로 `https://api.perplexity.ai`로 라우팅됩니다.
+- **OpenRouter:** `sk-or-`로 시작하는 API 키는 OpenRouter로 라우팅됩니다.
 
-### Configuration
+### 설정
 
 ```json
 {
@@ -223,16 +223,16 @@ OpenClaw supports [Perplexity AI](https://www.perplexity.ai/) for web search. It
 }
 ```
 
-- **`apiKey`**: Your Perplexity or OpenRouter key.
-- **`baseUrl`**: (Optional) Override the default API endpoint.
-- **`model`**: (Optional) Defaults to `sonar-pro`.
+- **`apiKey`**: Perplexity 또는 OpenRouter 키입니다.
+- **`baseUrl`**: (선택 사항) 기본 API 엔드포인트를 덮어씁니다.
+- **`model`**: (선택 사항) 기본값은 `sonar-pro`입니다.
 
 ## Grok Search (xAI)
 
-[xAI Grok](https://x.ai/) provides a web search tool via the Responses API.
+[xAI Grok](https://x.ai/)은 Responses API를 통해 웹 검색 도구를 제공합니다.
 
-1.  **Environment Variable:** Set `XAI_API_KEY` in your environment.
-2.  **Configuration:** Update `~/.openclaw/openclaw.json`:
+1.  **환경 변수:** 환경 변수에 `XAI_API_KEY`를 설정하세요.
+2.  **설정:** `~/.openclaw/openclaw.json`을 업데이트하세요:
 
 ```json
 {
@@ -249,18 +249,18 @@ OpenClaw supports [Perplexity AI](https://www.perplexity.ai/) for web search. It
 }
 ```
 
-### Gateway & Authentication Errors
+### 게이트웨이 및 인증 오류 (Gateway & Authentication Errors)
 
-While configuring web search, you may encounter gateway-level security errors if your connection is not properly authorized or secured.
+웹 검색을 설정하는 동안 연결이 적절하게 인증되거나 보안이 유지되지 않으면 게이트웨이 수준의 보안 오류가 발생할 수 있습니다.
 
-#### Origin not allowed
+#### 허용되지 않은 오리진 (Origin not allowed)
 
-**Error:** `origin not allowed (open the Control UI from the gateway host or allow it in gateway.controlUi.allowedOrigins)`
+**오류:** `origin not allowed (open the Control UI from the gateway host or allow it in gateway.controlUi.allowedOrigins)`
 
-This happens when you try to access the OpenClaw Control UI from a browser on a different machine or IP that isn't in the allowlist.
+허용 리스트에 없는 다른 컴퓨터나 IP의 브라우저에서 OpenClaw Control UI에 액세스하려고 할 때 발생합니다.
 
-**Resolution:**
-Update `gateway.controlUi.allowedOrigins` in your `openclaw.json` to include the IP address of the machine you are browsing from, or use `"*"` to allow any origin (not recommended for public networks).
+**해결 방법:**
+`openclaw.json`의 `gateway.controlUi.allowedOrigins`를 업데이트하여 브라우징 중인 컴퓨터의 IP 주소를 포함하거나, 임의의 오리진을 허용하려면 `"*"`를 사용하세요 (공개 네트워크에서는 권장되지 않음).
 
 ```json
 {
@@ -272,17 +272,17 @@ Update `gateway.controlUi.allowedOrigins` in your `openclaw.json` to include the
 }
 ```
 
-#### Device identity required
+#### 기기 식별 필요 (Device identity required)
 
-**Error:** `device identity required` or `control ui requires device identity (use HTTPS or localhost secure context)`
+**오류:** `device identity required` 또는 `control ui requires device identity (use HTTPS or localhost secure context)`
 
-OpenClaw uses device identity to secure the connection between your browser and the gateway. This requires a **Secure Context** (HTTPS or `localhost`) for the browser's cryptographic APIs to work.
+OpenClaw는 브라우저와 게이트웨이 사이의 연결을 보호하기 위해 기기 식별을 사용합니다. 이를 위해서는 브라우저의 암호화 API가 작동할 수 있도록 **보안 컨텍스트**(HTTPS 또는 `localhost`)가 필요합니다.
 
-**Resolution:**
+**해결 방법:**
 
-1.  **Use Localhost:** Access the UI via `http://localhost:18789` if the gateway is running on the same machine.
-2.  **Use HTTPS:** Set up a reverse proxy with TLS (e.g., Nginx, Caddy) to serve the gateway over HTTPS.
-3.  **Insecure Auth (Advanced):** If you must use HTTP on a private network, you can enable insecure auth (not recommended):
+1.  **Localhost 사용:** 게이트웨이가 같은 컴퓨터에서 실행 중인 경우 `http://localhost:18789`를 통해 UI에 액세스하세요.
+2.  **HTTPS 사용:** 게이트웨이를 HTTPS로 제공하기 위해 리버스 프록시(예: Nginx, Caddy)를 TLS와 함께 설정하세요.
+3.  **보안되지 않은 인증 (고급):** 사설 네트워크에서 반드시 HTTP를 사용해야 하는 경우 보안되지 않은 인증을 활성화할 수 있습니다 (권장되지 않음):
 
 ```json
 {
@@ -296,11 +296,11 @@ OpenClaw uses device identity to secure the connection between your browser and 
 ```
 
 > [!WARNING]
-> Disabling device auth or allowing insecure auth exposes your gateway to potential session hijacking. Only use these settings on trusted private networks.
+> 기기 인증을 비활성화하거나 보안되지 않은 인증을 허용하면 게이트웨이가 세션 하이재킹에 노출될 수 있습니다. 신뢰할 수 있는 사설 네트워크에서만 이 설정을 사용하세요.
 
-#### Plaintext WebSocket blocked on Private Network
+#### 사설 네트워크에서 평문 WebSocket 차단 (Plaintext WebSocket blocked on Private Network)
 
-**Error:** `SECURITY ERROR: Gateway URL "ws://..." uses plaintext ws:// to a non-loopback address.`
+**오류:** `SECURITY ERROR: Gateway URL "ws://..." uses plaintext ws:// to a non-loopback address.`
 
 신뢰할 수 있는 사설 네트워크(LAN) 환경에서 기존처럼 사용하시려면, 환경 변수를 통해 이 보안 체크를 일시적으로 허용해야 합니다.
 
@@ -326,32 +326,32 @@ OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 pnpm openclaw onboard --install-daemon
 
 이렇게 실행하시면 다시 TUI/WEB 선택 메뉴가 나타날 것입니다.
 
-## Final checklist
+## 최종 체크리스트
 
-- Verify `~/.openclaw/openclaw.json` contains the correct `baseUrl` and `allowPrivateNetwork` settings.
-- Ensure SearXNG `settings.yml` has `json` format enabled and, if needed, the limiter plugin disabled.
-- Restart the OpenClaw daemon to apply configuration changes:
+- `~/.openclaw/openclaw.json`에 올바른 `baseUrl` 및 `allowPrivateNetwork` 설정이 포함되어 있는지 확인하세요.
+- SearXNG `settings.yml`에 `json` 형식이 활성화되어 있고, 필요한 경우 Limiter 플러그인이 비활성화되어 있는지 확인하세요.
+- 설정 변경 사항을 적용하려면 OpenClaw 데몬을 재시작하세요:
   ```bash
   pkill -f openclaw
   pnpm openclaw onboard --install-daemon
   ```
-- Test a simple search in Mattermost:
+- Mattermost에서 간단한 검색을 테스트해 보세요:
   ```
   /ask search "내일 대전 날씨" freshness=pd
   ```
-  If the result appears without a 403 error, the setup is complete.
+  403 오류 없이 결과가 나타나면 설정이 완료된 것입니다.
 
-## Usage Example
+## 사용 예시
 
-In Mattermost, you can ask OpenClaw to perform a web search like this:
+Mattermost에서 다음과 같이 OpenClaw에 웹 검색을 요청할 수 있습니다:
 
 ```
 /ask search "내일 대전 날씨" freshness=pd
 ```
 
-The `freshness=pd` flag limits results to the past day. Adjust the provider or parameters as needed.
+`freshness=pd` 플래그는 결과를 지난 하루로 제한합니다. 필요에 따라 프로바이더나 파라미터를 조정하세요.
 
-> **Note:** After modifying `~/.openclaw/openclaw.json`, restart the OpenClaw daemon to apply changes:
+> **참고:** `~/.openclaw/openclaw.json`을 수정한 후 변경 사항을 적용하려면 OpenClaw 데몬을 재시작하세요:
 >
 > ```bash
 > pkill -f openclaw
