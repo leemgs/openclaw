@@ -168,3 +168,88 @@ export async function readResponseText(
     return { text: "", truncated: false, bytesRead: 0 };
   }
 }
+
+export type ReadResponseBufferResult = {
+  buffer: Buffer;
+  truncated: boolean;
+  bytesRead: number;
+};
+
+export async function readResponseBuffer(
+  res: Response,
+  options?: { maxBytes?: number },
+): Promise<ReadResponseBufferResult> {
+  const maxBytesRaw = options?.maxBytes;
+  const maxBytes =
+    typeof maxBytesRaw === "number" && Number.isFinite(maxBytesRaw) && maxBytesRaw > 0
+      ? Math.floor(maxBytesRaw)
+      : undefined;
+
+  const body = (res as unknown as { body?: unknown }).body;
+  if (
+    maxBytes &&
+    body &&
+    typeof body === "object" &&
+    "getReader" in body &&
+    typeof (body as { getReader: () => unknown }).getReader === "function"
+  ) {
+    const reader = (body as ReadableStream<Uint8Array>).getReader();
+    let bytesRead = 0;
+    let truncated = false;
+    const parts: Uint8Array[] = [];
+
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          break;
+        }
+        if (!value || value.byteLength === 0) {
+          continue;
+        }
+
+        let chunk = value;
+        if (bytesRead + chunk.byteLength > maxBytes) {
+          const remaining = Math.max(0, maxBytes - bytesRead);
+          if (remaining <= 0) {
+            truncated = true;
+            break;
+          }
+          chunk = chunk.subarray(0, remaining);
+          truncated = true;
+        }
+
+        bytesRead += chunk.byteLength;
+        parts.push(chunk);
+
+        if (truncated || bytesRead >= maxBytes) {
+          truncated = true;
+          break;
+        }
+      }
+    } catch {
+      // Best-effort
+    } finally {
+      if (truncated) {
+        try {
+          await reader.cancel();
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    return { buffer: Buffer.concat(parts), truncated, bytesRead };
+  }
+
+  try {
+    const ab = await res.arrayBuffer();
+    const buffer = Buffer.from(ab);
+    if (maxBytes && buffer.length > maxBytes) {
+      return { buffer: buffer.subarray(0, maxBytes), truncated: true, bytesRead: maxBytes };
+    }
+    return { buffer, truncated: false, bytesRead: buffer.length };
+  } catch {
+    return { buffer: Buffer.alloc(0), truncated: false, bytesRead: 0 };
+  }
+}
