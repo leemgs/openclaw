@@ -177,6 +177,7 @@ export const en: TranslationMap = {
     ptBR: "Português (Brazilian Portuguese)",
     de: "Deutsch (German)",
     es: "Español (Spanish)",
+    ko: "한국어 (Korean)",
   },
   cron: {
     summary: {
