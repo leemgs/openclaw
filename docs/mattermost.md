@@ -123,6 +123,20 @@ If a delivery target (like `to`) is not provided for outbound messages (common i
 
 Example: `defaultTo: "@myusername"` or `defaultTo: "channel:xyz123"`
 
+Full configuration example:
+
+```json
+{
+  "channels": {
+    "mattermost": {
+      "botToken": "mm-token-1234",
+      "baseUrl": "https://chat.example.com",
+      "defaultTo": "@myusername" // Fixed target for Cron Jobs
+    }
+  }
+}
+```
+
 ## Multi-account
 
 Mattermost supports multiple accounts under `channels.mattermost.accounts`:
