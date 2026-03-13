@@ -37,7 +37,7 @@ export { extractReadableContent } from "./web-fetch-utils.js";
 const EXTRACT_MODES = ["markdown", "text"] as const;
 
 const DEFAULT_FETCH_MAX_CHARS = 50_000;
-const DEFAULT_FETCH_MAX_RESPONSE_BYTES = 2_000_000;
+const DEFAULT_FETCH_MAX_RESPONSE_BYTES = 10_000_000;
 const FETCH_MAX_RESPONSE_BYTES_MIN = 32_000;
 const FETCH_MAX_RESPONSE_BYTES_MAX = 10_000_000;
 const DEFAULT_FETCH_MAX_REDIRECTS = 3;
@@ -776,7 +776,7 @@ export function createWebFetchTool(options?: {
     label: "Web Fetch",
     name: "web_fetch",
     description:
-      "Fetch and extract readable content from a URL (HTML → markdown/text). Use for lightweight page access without browser automation.",
+      "Fetch and extract readable content from a URL (HTML or PDF → markdown/text). Use for lightweight page/document access without browser automation.",
     parameters: WebFetchSchema,
     execute: async (_toolCallId, args) => {
       const params = args as Record<string, unknown>;
