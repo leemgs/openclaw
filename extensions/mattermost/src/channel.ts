@@ -245,6 +245,7 @@ const mattermostConfigAccessors = createScopedAccountConfigAccessors({
       allowFrom,
       normalizeEntry: formatAllowEntry,
     }),
+  resolveDefaultTo: (account) => account.defaultTo,
 });
 
 export const mattermostPlugin: ChannelPlugin<ResolvedMattermostAccount> = {
