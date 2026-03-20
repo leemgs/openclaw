@@ -185,7 +185,7 @@ Verify that the JSON endpoint works manually:
 ```bash
 curl -X GET "http://localhost:8080/search?q=test&format=json" \
   -H "User-Agent: Mozilla/5.0" \
-  -H "Accept-Language: ko-KR,ko;q=0.9"
+  -H "Accept-Language: en-US,en;q=0.9"
 ```
 
 If you receive a JSON response, the configuration is correct. If you still see a 403, re-examine `settings.yml`.
@@ -195,7 +195,46 @@ If you receive a JSON response, the configuration is correct. If you still see a
 SearXNG supports:
 
 - **`freshness`**: Values (`pd`, `pw`, `pm`, `py`) map to SearXNG's `time_range` filter (`day`, `week`, `month`, `year`).
-- **`language`**: ISO 639-1 language codes (e.g., `ko`, `en`, `de`) to filter results by language.
+- **`language`**: ISO 639-1 language codes (e.g., `en`, `ko`, `de`) to filter results by language.
+
+### 5. Running SearXNG at boot (systemd)
+
+To ensure SearXNG starts automatically when your system boots, you can create a systemd service unit. While Docker containers can be set to `--restart always`, using systemd allows for better integration with other system services and logging.
+
+**Example: `searxng.service` (Docker-based)**
+
+1.  **Create the service file:**
+    ```bash
+    sudo vi /etc/systemd/system/searxng.service
+    ```
+2.  **Add the following content:**
+
+    ```ini
+    [Unit]
+    Description=SearXNG Docker Container
+    After=docker.service
+    Requires=docker.service
+
+    [Service]
+    TimeoutStartSec=0
+    Restart=always
+    ExecStartPre=-/usr/bin/docker stop searxng
+    ExecStartPre=-/usr/bin/docker rm searxng
+    ExecStart=/usr/bin/docker run --name searxng -p 8080:8080 -v /etc/searxng/settings.yml:/etc/searxng/settings.yml searxng/searxng
+    ExecStop=/usr/bin/docker stop searxng
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+    _(Ensure the volume path `-v` matches your actual `settings.yml` location on the host.)_
+
+3.  **Enable and start the service:**
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable searxng
+    sudo systemctl start searxng
+    ```
 
 ## Perplexity / OpenRouter
 
@@ -302,29 +341,29 @@ OpenClaw uses device identity to secure the connection between your browser and 
 
 **Error:** `SECURITY ERROR: Gateway URL "ws://..." uses plaintext ws:// to a non-loopback address.`
 
-신뢰할 수 있는 사설 네트워크(LAN) 환경에서 기존처럼 사용하시려면, 환경 변수를 통해 이 보안 체크를 일시적으로 허용해야 합니다.
+To use it in a trusted private network (LAN) environment, you must temporarily allow this security check via environment variables.
 
-터미널에서 다음과 같이 명령어를 실행해 보세요:
+Try running the following command in your terminal:
 
 ```bash
-# 보안 체크 우회 옵션을 켜고 온보딩 실행
+# Run onboarding with the security check bypass option enabled
 export OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1
 pnpm openclaw onboard --install-daemon
 ```
 
-또는 한 줄로 실행:
+Or run it in one line:
 
 ```bash
 OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 pnpm openclaw onboard --install-daemon
 ```
 
-**요약**
+**Summary**
 
-- **원인**: `bind: "lan"` 설정으로 인해 사설 IP를 사용하는데, 강화된 보안 정책이 `ws://` (평문) 연결을 차단함.
-- **결과**: 게이트웨이 연결 실패로 인식되어 TUI/WEB 선택 메뉴가 스킵됨.
-- **해결**: `OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1` 환경 변수를 설정하여 보안 경고를 수동으로 허용.
+- **Cause**: Customizing to use `bind: "lan"` with a private IP, but the enforced security policy blocks `ws://` (plaintext) connections.
+- **Result**: The gateway connection is recognized as failed, and the TUI/WEB selection menu is skipped.
+- **Solution**: Manually allow security warnings by setting the `OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1` environment variable.
 
-이렇게 실행하시면 다시 TUI/WEB 선택 메뉴가 나타날 것입니다.
+Running the command above will make the TUI/WEB selection menu appear again.
 
 ## Final checklist
 
@@ -337,7 +376,7 @@ OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 pnpm openclaw onboard --install-daemon
   ```
 - Test a simple search in Mattermost:
   ```
-  /ask search "내일 대전 날씨" freshness=pd
+  /ask search "weather tomorrow" freshness=pd
   ```
   If the result appears without a 403 error, the setup is complete.
 
@@ -346,7 +385,7 @@ OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 pnpm openclaw onboard --install-daemon
 In Mattermost, you can ask OpenClaw to perform a web search like this:
 
 ```
-/ask search "내일 대전 날씨" freshness=pd
+/ask search "weather tomorrow" freshness=pd
 ```
 
 The `freshness=pd` flag limits results to the past day. Adjust the provider or parameters as needed.
