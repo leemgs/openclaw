@@ -1100,6 +1100,7 @@
                 "group": "Providers",
                 "pages": [
                   "providers/anthropic",
+                  "custom-inference-api",
                   "providers/bedrock",
                   "providers/cloudflare-ai-gateway",
                   "providers/claude-max-api-proxy",
