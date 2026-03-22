@@ -4,6 +4,7 @@ import type { AgentModelEntryConfig } from "../config/types.agent-defaults.js";
 import type {
   ModelApi,
   ModelDefinitionConfig,
+  ModelProviderAuthMode,
   ModelProviderConfig,
 } from "../config/types.models.js";
 
@@ -102,6 +103,7 @@ export function applyProviderConfigWithDefaultModels(
     baseUrl: string;
     defaultModels: ModelDefinitionConfig[];
     defaultModelId?: string;
+    auth?: string;
   },
 ): OpenClawConfig {
   const providerState = resolveProviderModelMergeState(cfg, params.providerId);
@@ -125,6 +127,7 @@ export function applyProviderConfigWithDefaultModels(
     baseUrl: params.baseUrl,
     mergedModels,
     fallbackModels: defaultModels,
+    auth: params.auth,
   });
 }
 
@@ -137,6 +140,7 @@ export function applyProviderConfigWithDefaultModel(
     baseUrl: string;
     defaultModel: ModelDefinitionConfig;
     defaultModelId?: string;
+    auth?: string;
   },
 ): OpenClawConfig {
   return applyProviderConfigWithDefaultModels(cfg, {
@@ -146,6 +150,7 @@ export function applyProviderConfigWithDefaultModel(
     baseUrl: params.baseUrl,
     defaultModels: [params.defaultModel],
     defaultModelId: params.defaultModelId ?? params.defaultModel.id,
+    auth: params.auth,
   });
 }
 
@@ -207,6 +212,7 @@ export function applyProviderConfigWithModelCatalog(
     api: ModelApi;
     baseUrl: string;
     catalogModels: ModelDefinitionConfig[];
+    auth?: string;
   },
 ): OpenClawConfig {
   const providerState = resolveProviderModelMergeState(cfg, params.providerId);
@@ -228,6 +234,7 @@ export function applyProviderConfigWithModelCatalog(
     baseUrl: params.baseUrl,
     mergedModels,
     fallbackModels: catalogModels,
+    auth: params.auth,
   });
 }
 
@@ -289,6 +296,7 @@ function applyProviderConfigWithMergedModels(
     baseUrl: string;
     mergedModels: ModelDefinitionConfig[];
     fallbackModels: ModelDefinitionConfig[];
+    auth?: string;
   },
 ): OpenClawConfig {
   params.providerState.providers[params.providerId] = buildProviderConfig({
@@ -297,6 +305,7 @@ function applyProviderConfigWithMergedModels(
     baseUrl: params.baseUrl,
     mergedModels: params.mergedModels,
     fallbackModels: params.fallbackModels,
+    auth: params.auth,
   });
   return applyOnboardAuthAgentModelsAndProviders(cfg, {
     agentModels: params.agentModels,
@@ -310,6 +319,7 @@ function buildProviderConfig(params: {
   baseUrl: string;
   mergedModels: ModelDefinitionConfig[];
   fallbackModels: ModelDefinitionConfig[];
+  auth?: string;
 }): ModelProviderConfig {
   const { apiKey: existingApiKey, ...existingProviderRest } = (params.existingProvider ?? {}) as {
     apiKey?: string;
@@ -320,6 +330,7 @@ function buildProviderConfig(params: {
     ...existingProviderRest,
     baseUrl: params.baseUrl,
     api: params.api,
+    ...(params.auth ? { auth: params.auth as unknown as ModelProviderAuthMode } : {}),
     ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
     models: params.mergedModels.length > 0 ? params.mergedModels : params.fallbackModels,
   };

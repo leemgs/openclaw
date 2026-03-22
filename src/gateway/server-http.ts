@@ -733,6 +733,7 @@ export function createGatewayHttpServer(opts: {
   rateLimiter?: AuthRateLimiter;
   getReadiness?: ReadinessChecker;
   tlsOptions?: TlsOptions;
+  gatewayMode?: "local" | "remote";
 }): HttpServer {
   const {
     canvasHost,
@@ -837,6 +838,7 @@ export function createGatewayHttpServer(opts: {
               trustedProxies,
               allowRealIpFallback,
               rateLimiter,
+              gatewayMode: opts.gatewayMode ?? "local",
             }),
         });
       }

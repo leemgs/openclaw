@@ -115,7 +115,7 @@ OpenClaw connects to real messaging surfaces. Treat inbound DMs as **untrusted i
 
 Full security guide: [Security](https://docs.openclaw.ai/gateway/security)
 
-Default behavior on Telegram/WhatsApp/Signal/iMessage/Microsoft Teams/Discord/Google Chat/Slack:
+Default behavior on Mattermost/Telegram/WhatsApp/Signal/iMessage/Microsoft Teams/Discord/Google Chat/Slack:
 
 - **DM pairing** (`dmPolicy="pairing"` / `channels.discord.dmPolicy="pairing"` / `channels.slack.dmPolicy="pairing"`; legacy: `channels.discord.dm.policy`, `channels.slack.dm.policy`): unknown senders receive a short pairing code and the bot does not process their message.
 - Approve with: `openclaw pairing approve <channel> <code>` (then the sender is added to a local allowlist store).
@@ -269,7 +269,7 @@ ClawHub is a minimal skill registry. With ClawHub enabled, the agent can search 
 
 ## Chat commands
 
-Send these in WhatsApp/Telegram/Slack/Google Chat/Microsoft Teams/WebChat (group commands are owner-only):
+Send these in WhatsApp/Telegram/Slack/Mattermost/Google Chat/Microsoft Teams/WebChat (group commands are owner-only):
 
 - `/status` — compact session status (model + tokens, cost when available)
 - `/new` or `/reset` — reset the session
@@ -329,6 +329,12 @@ Minimal `~/.openclaw/openclaw.json` (model + defaults):
 
 [Full configuration reference (all keys + examples).](https://docs.openclaw.ai/gateway/configuration)
 
+### Web Search
+
+OpenClaw supports multiple web search providers via the `web_search` tool (Brave, Perplexity, Tavily, SearXNG).
+
+Details: [Web Search Providers](/docs/websearch.md)
+
 ## Security model (important)
 
 - **Default:** tools run on the host for the **main** session, so the agent has full access when it’s just you.
@@ -361,6 +367,23 @@ Details: [Security guide](https://docs.openclaw.ai/gateway/security) · [Docker 
 ### [Slack](https://docs.openclaw.ai/channels/slack)
 
 - Set `SLACK_BOT_TOKEN` + `SLACK_APP_TOKEN` (or `channels.slack.botToken` + `channels.slack.appToken`).
+
+### [Mattermost](/docs/mattermost.md)
+
+- Status: supported via plugin (`@openclaw/mattermost`).
+- Set `MATTERMOST_BOT_TOKEN` and `MATTERMOST_URL` (or `channels.mattermost.botToken` + `channels.mattermost.url`).
+
+```json5
+{
+  channels: {
+    mattermost: {
+      botToken: "mm-token-1234",
+      baseUrl: "https://chat.example.com",
+      defaultTo: "@myusername",
+    },
+  },
+}
+```
 
 ### [Discord](https://docs.openclaw.ai/channels/discord)
 

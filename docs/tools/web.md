@@ -506,7 +506,7 @@ Notes:
 - Firecrawl SecretRefs are resolved only when Firecrawl is active (`tools.web.fetch.enabled !== false` and `tools.web.fetch.firecrawl.enabled !== false`).
 - If Firecrawl is active and its SecretRef is unresolved with no `FIRECRAWL_API_KEY` fallback, startup/reload fails fast.
 - `web_fetch` sends a Chrome-like User-Agent and `Accept-Language` by default; override `userAgent` if needed.
-- `web_fetch` blocks private/internal hostnames and re-checks redirects (limit with `maxRedirects`).
+- `web_fetch` blocks private/internal hostnames by default in `remote` mode. In `local` mode (see `gateway.mode`), access to private/internal IP addresses is permitted by default for local development.
 - `maxChars` is clamped to `tools.web.fetch.maxCharsCap`.
 - `web_fetch` caps the downloaded response body size to `tools.web.fetch.maxResponseBytes` before parsing; oversized responses are truncated and include a warning.
 - `web_fetch` is best-effort extraction; some sites will need the browser tool.

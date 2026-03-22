@@ -1046,6 +1046,24 @@
                 ]
               },
               {
+                "group": "Browser",
+                "pages": [
+                  "tools/browser",
+                  "tools/browser-login",
+                  "tools/chrome-extension",
+                  "tools/browser-linux-troubleshooting"
+                ]
+              },
+              {
+                "group": "Agent coordination",
+                "pages": [
+                  "tools/agent-send",
+                  "tools/subagents",
+                  "tools/acp-agents",
+                  "tools/multi-agent-sandbox-tools"
+                ]
+              },
+              {
                 "group": "Skills",
                 "pages": [
                   "tools/skills",
@@ -1133,6 +1151,7 @@
                 "group": "Providers",
                 "pages": [
                   "providers/anthropic",
+                  "custom-inference-api",
                   "providers/bedrock",
                   "providers/cloudflare-ai-gateway",
                   "providers/claude-max-api-proxy",

@@ -43,6 +43,14 @@ export const CORE_AUTH_CHOICE_OPTIONS: ReadonlyArray<AuthChoiceOption> = [
     groupLabel: "Custom Provider",
     groupHint: "Any OpenAI or Anthropic compatible endpoint",
   },
+  {
+    value: "owl-api-key",
+    label: "Owl",
+    hint: "API key (Basic auth)",
+    groupId: "owl",
+    groupLabel: "Owl",
+    groupHint: "API key (Basic auth)",
+  },
 ];
 
 export function formatStaticAuthChoiceChoicesForCli(params?: {

@@ -50,6 +50,7 @@ export type BuiltInAuthChoice =
   | "qianfan-api-key"
   | "modelstudio-api-key-cn"
   | "modelstudio-api-key"
+  | "owl-api-key"
   | "custom-api-key"
   | "skip";
 export type AuthChoice = BuiltInAuthChoice | (string & {});
@@ -78,6 +79,7 @@ export type BuiltInAuthChoiceGroupId =
   | "huggingface"
   | "qianfan"
   | "modelstudio"
+  | "owl"
   | "xai"
   | "volcengine"
   | "byteplus"
@@ -142,6 +144,7 @@ export type OnboardOptions = {
   qianfanApiKey?: string;
   modelstudioApiKeyCn?: string;
   modelstudioApiKey?: string;
+  owlApiKey?: string;
   customBaseUrl?: string;
   customApiKey?: string;
   customModelId?: string;

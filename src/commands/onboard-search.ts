@@ -151,12 +151,17 @@ export function applySearchKey(
   config: OpenClawConfig,
   provider: SearchProvider,
   key: SecretInput,
+  extras?: { baseUrl?: string },
 ): OpenClawConfig {
   const providerEntry = resolveSearchProviderEntry(config, provider);
   if (!providerEntry) {
     return config;
   }
   const search: MutableSearchConfig = { ...config.tools?.web?.search, provider, enabled: true };
+  if (provider === "searxng" && extras?.baseUrl) {
+    const searxng = search.searxng as Record<string, unknown> | undefined;
+    search.searxng = { ...searxng, baseUrl: extras.baseUrl };
+  }
   if (!providerEntry.setConfiguredCredentialValue) {
     providerEntry.setCredentialValue(search, key);
   }
@@ -370,9 +375,23 @@ export async function setupSearch(
   });
 
   const key = keyInput?.trim() ?? "";
-  if (key) {
-    const secretInput = resolveSearchSecretInput(config, choice, key, opts?.secretInputMode);
-    return applySearchKey(config, choice, secretInput);
+  let baseUrl: string | undefined;
+  if (choice === "searxng") {
+    const baseUrlInput = await prompter.text({
+      message: "SearXNG base URL",
+      initialValue:
+        (config.tools?.web?.search?.searxng as { baseUrl?: string })?.baseUrl ||
+        "http://localhost:8080",
+      placeholder: "http://localhost:8080",
+    });
+    baseUrl = baseUrlInput?.trim() || "http://localhost:8080";
+  }
+
+  if (key || baseUrl) {
+    const secretInput = key
+      ? resolveSearchSecretInput(config, choice, key, opts?.secretInputMode)
+      : existingKey || "";
+    return applySearchKey(config, choice, secretInput, { baseUrl });
   }
 
   if (existingKey) {

@@ -31,6 +31,12 @@ export {
   buildXiaomiProvider,
 } from "../../extensions/xiaomi/provider-catalog.js";
 import {
+  buildOwlProvider,
+  OWL_BASE_URL,
+  OWL_DEFAULT_MODEL_ID,
+} from "./models-config.providers.static.js";
+export { buildOwlProvider, OWL_BASE_URL, OWL_DEFAULT_MODEL_ID };
+import {
   groupPluginDiscoveryProvidersByOrder,
   normalizePluginDiscoveryResult,
   resolvePluginDiscoveryProviders,
@@ -830,6 +836,11 @@ export async function resolveImplicitProviders(
               : implicitAnthropicVertex.models,
         }
       : implicitAnthropicVertex;
+  }
+
+  const owlApiKey = resolveProviderApiKey("owl").apiKey;
+  if (owlApiKey && !providers["owl"]) {
+    providers["owl"] = { ...buildOwlProvider(), apiKey: owlApiKey };
   }
 
   return providers;

@@ -96,7 +96,7 @@ describe("web_search perplexity compatibility routing", () => {
     });
   });
 
-  it("treats unrecognized configured keys as direct Perplexity by default", () => {
+  it("treats unrecognized configured keys as OpenRouter by default", () => {
     expect(
       resolvePerplexityTransport({
         apiKey: enterprisePerplexityApiKey,
@@ -319,8 +319,8 @@ describe("web_search brave mode resolution", () => {
       {
         title: "Example",
         url: "https://example.com",
-        description: "A B",
-        age: "2024-01-01",
+        snippets: ["A", "B"],
+        siteName: "example.com",
       },
     ]);
   });

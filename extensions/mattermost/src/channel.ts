@@ -275,6 +275,7 @@ const mattermostConfigAdapter = createScopedChannelConfigAdapter<ResolvedMatterm
       allowFrom,
       normalizeEntry: formatAllowEntry,
     }),
+  resolveDefaultTo: (account) => account.defaultTo,
 });
 
 const resolveMattermostDmPolicy = createScopedDmSecurityResolver<ResolvedMattermostAccount>({

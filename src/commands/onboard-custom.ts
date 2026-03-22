@@ -3,7 +3,7 @@ import { DEFAULT_PROVIDER } from "../agents/defaults.js";
 import { buildModelAliasIndex, modelKey } from "../agents/model-selection.js";
 import { OLLAMA_DEFAULT_BASE_URL } from "../agents/ollama-defaults.js";
 import type { OpenClawConfig } from "../config/config.js";
-import type { ModelProviderConfig } from "../config/types.models.js";
+import type { ModelProviderAuthMode, ModelProviderConfig } from "../config/types.models.js";
 import { isSecretRef, type SecretInput } from "../config/types.secrets.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { fetchWithTimeout } from "../utils/fetch-timeout.js";
@@ -115,6 +115,7 @@ export type ApplyCustomApiConfigParams = {
   apiKey?: SecretInput;
   providerId?: string;
   alias?: string;
+  auth?: string;
 };
 
 export type ParseNonInteractiveCustomApiFlagsParams = {
@@ -360,11 +361,16 @@ async function requestOpenAiVerification(params: {
   baseUrl: string;
   apiKey: string;
   modelId: string;
+  auth?: string;
 }): Promise<VerificationResult> {
   const isBaseUrlAzureUrl = isAzureUrl(params.baseUrl);
   const headers = isBaseUrlAzureUrl
     ? buildAzureOpenAiHeaders(params.apiKey)
-    : buildOpenAiHeaders(params.apiKey);
+    : params.auth === "basic"
+      ? { Authorization: `Basic ${params.apiKey}` }
+      : params.auth === "header"
+        ? { "x-api-key": params.apiKey }
+        : buildOpenAiHeaders(params.apiKey);
   if (isAzureOpenAiUrl(params.baseUrl)) {
     const endpoint = new URL(
       "responses",
@@ -403,6 +409,7 @@ async function requestAnthropicVerification(params: {
   baseUrl: string;
   apiKey: string;
   modelId: string;
+  auth?: string;
 }): Promise<VerificationResult> {
   // Use a base URL with /v1 injected for this raw fetch only. The rest of the app uses the
   // Anthropic client, which appends /v1 itself; config should store the base URL
@@ -415,9 +422,15 @@ async function requestAnthropicVerification(params: {
     modelId: params.modelId,
     endpointPath: "messages",
   });
+  const headers =
+    params.auth === "basic"
+      ? { Authorization: `Basic ${params.apiKey}` }
+      : params.auth === "header"
+        ? { "x-api-key": params.apiKey }
+        : buildAnthropicHeaders(params.apiKey);
   return await requestVerification({
     endpoint,
-    headers: buildAnthropicHeaders(params.apiKey),
+    headers,
     body: {
       model: params.modelId,
       max_tokens: 1,
@@ -702,6 +715,7 @@ export function applyCustomApiConfig(params: ApplyCustomApiConfigParams): Custom
           ...existingProviderRest,
           baseUrl: resolvedBaseUrl,
           api: providerApi,
+          ...(params.auth ? { auth: params.auth as unknown as ModelProviderAuthMode } : {}),
           ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
           ...(isAzure ? { authHeader: false } : {}),
           ...(azureHeaders ? { headers: azureHeaders } : {}),
@@ -793,6 +807,16 @@ export async function promptCustomApiConfig(params: {
 
   let modelId = await promptCustomApiModelId(prompter);
 
+  const authModeChoice = await prompter.select({
+    message: "Authentication Mode",
+    options: [
+      { value: "bearer", label: "Bearer Token", hint: "Authorization: Bearer <key>" },
+      { value: "basic", label: "Basic Auth", hint: "Authorization: Basic <key>" },
+      { value: "header", label: "Custom Header", hint: "x-api-key: <key>" },
+    ],
+    initialValue: "bearer",
+  });
+
   let compatibility: CustomApiCompatibility | null =
     compatibilityChoice === "unknown" ? null : compatibilityChoice;
 
@@ -845,8 +869,18 @@ export async function promptCustomApiConfig(params: {
     const verifySpinner = prompter.progress("Verifying...");
     const result =
       compatibility === "anthropic"
-        ? await requestAnthropicVerification({ baseUrl, apiKey: resolvedApiKey, modelId })
-        : await requestOpenAiVerification({ baseUrl, apiKey: resolvedApiKey, modelId });
+        ? await requestAnthropicVerification({
+            baseUrl,
+            apiKey: resolvedApiKey,
+            modelId,
+            auth: authModeChoice,
+          })
+        : await requestOpenAiVerification({
+            baseUrl,
+            apiKey: resolvedApiKey,
+            modelId,
+            auth: authModeChoice,
+          });
     if (result.ok) {
       verifySpinner.stop("Verification successful.");
       break;
@@ -907,6 +941,7 @@ export async function promptCustomApiConfig(params: {
     apiKey,
     providerId: providerIdInput,
     alias: aliasInput,
+    auth: authModeChoice,
   });
 
   if (result.providerIdRenamedFrom && result.providerId) {

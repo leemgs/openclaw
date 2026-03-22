@@ -1,3 +1,4 @@
+import type { OpenClawConfig } from "../config/config.js";
 export {
   ANTHROPIC_VERTEX_DEFAULT_MODEL_ID,
   buildAnthropicVertexProvider,
@@ -37,3 +38,37 @@ export {
   XIAOMI_DEFAULT_MODEL_ID,
   buildXiaomiProvider,
 } from "../../extensions/xiaomi/provider-catalog.js";
+
+type ModelsConfig = NonNullable<OpenClawConfig["models"]>;
+type ProviderConfig = NonNullable<ModelsConfig["providers"]>[string];
+
+export const OWL_BASE_URL =
+  "https://inference-web-api.mycloud.com/custom_modelo-owl-ultra-think/v1";
+export const OWL_DEFAULT_MODEL_ID = "custom_model2-37b-instruct";
+export const OWL_DEFAULT_CONTEXT_WINDOW = 120000;
+export const OWL_DEFAULT_MAX_TOKENS = 4096;
+export const OWL_DEFAULT_COST = {
+  input: 0.1,
+  output: 0.1,
+  cacheRead: 0.05,
+  cacheWrite: 0.05,
+};
+
+export function buildOwlProvider(): ProviderConfig {
+  return {
+    baseUrl: OWL_BASE_URL,
+    api: "openai-completions",
+    auth: "basic",
+    models: [
+      {
+        id: OWL_DEFAULT_MODEL_ID,
+        name: "Custom Owl Instruct",
+        reasoning: true,
+        input: ["text"],
+        cost: OWL_DEFAULT_COST,
+        contextWindow: OWL_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: OWL_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}

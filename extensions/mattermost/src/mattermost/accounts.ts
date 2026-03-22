@@ -24,6 +24,7 @@ export type ResolvedMattermostAccount = {
   chatmode?: MattermostChatMode;
   oncharPrefixes?: string[];
   requireMention?: boolean;
+  defaultTo?: string;
   textChunkLimit?: number;
   blockStreaming?: boolean;
   blockStreamingCoalesce?: MattermostAccountConfig["blockStreamingCoalesce"];
@@ -113,6 +114,7 @@ export function resolveMattermostAccount(params: {
   const botToken = configToken || envToken;
   const baseUrl = normalizeMattermostBaseUrl(configUrl || envUrl);
   const requireMention = resolveMattermostRequireMention(merged);
+  const defaultTo = merged.defaultTo ? String(merged.defaultTo).trim() : undefined;
 
   const botTokenSource: MattermostTokenSource = configToken ? "config" : envToken ? "env" : "none";
   const baseUrlSource: MattermostBaseUrlSource = configUrl ? "config" : envUrl ? "env" : "none";
@@ -129,6 +131,7 @@ export function resolveMattermostAccount(params: {
     chatmode: merged.chatmode,
     oncharPrefixes: merged.oncharPrefixes,
     requireMention,
+    defaultTo,
     textChunkLimit: merged.textChunkLimit,
     blockStreaming: merged.blockStreaming,
     blockStreamingCoalesce: merged.blockStreamingCoalesce,

@@ -333,10 +333,18 @@ function hasWebSearchKey(cfg: OpenClawConfig, env: NodeJS.ProcessEnv): boolean {
     search?.perplexity?.apiKey ||
     search?.tavily?.apiKey ||
     search?.searxng?.apiKey ||
+    search?.grok?.apiKey ||
+    search?.kimi?.apiKey ||
+    search?.gemini?.apiKey ||
     env.BRAVE_API_KEY ||
     env.PERPLEXITY_API_KEY ||
     env.TAVILY_API_KEY ||
-    env.SEARXNG_API_KEY,
+    env.SEARXNG_API_KEY ||
+    env.OPENROUTER_API_KEY ||
+    env.XAI_API_KEY ||
+    env.KIMI_API_KEY ||
+    env.MOONSHOT_API_KEY ||
+    env.GEMINI_API_KEY,
   );
 }
 

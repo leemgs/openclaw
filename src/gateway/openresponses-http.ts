@@ -54,6 +54,7 @@ type OpenResponsesHttpOptions = {
   trustedProxies?: string[];
   allowRealIpFallback?: boolean;
   rateLimiter?: AuthRateLimiter;
+  gatewayMode?: "local" | "remote";
 };
 
 const DEFAULT_BODY_BYTES = 20 * 1024 * 1024;
@@ -73,6 +74,7 @@ type ResolvedResponsesLimits = {
 
 function resolveResponsesLimits(
   config: GatewayHttpResponsesConfig | undefined,
+  gatewayMode: "local" | "remote" = "local",
 ): ResolvedResponsesLimits {
   const files = config?.files;
   const images = config?.images;
@@ -85,10 +87,12 @@ function resolveResponsesLimits(
         : DEFAULT_MAX_URL_PARTS,
     files: {
       ...fileLimits,
+      allowPrivateNetwork: files?.allowPrivateNetwork ?? gatewayMode === "local",
       urlAllowlist: normalizeInputHostnameAllowlist(files?.urlAllowlist),
     },
     images: {
       allowUrl: images?.allowUrl ?? true,
+      allowPrivateNetwork: images?.allowPrivateNetwork ?? gatewayMode === "local",
       urlAllowlist: normalizeInputHostnameAllowlist(images?.urlAllowlist),
       allowedMimes: normalizeMimeList(images?.allowedMimes, DEFAULT_INPUT_IMAGE_MIMES),
       maxBytes: images?.maxBytes ?? DEFAULT_INPUT_IMAGE_MAX_BYTES,
@@ -269,7 +273,7 @@ export async function handleOpenResponsesHttpRequest(
   res: ServerResponse,
   opts: OpenResponsesHttpOptions,
 ): Promise<boolean> {
-  const limits = resolveResponsesLimits(opts.config);
+  const limits = resolveResponsesLimits(opts.config, opts.gatewayMode);
   const maxBodyBytes =
     opts.maxBodyBytes ??
     (opts.config?.maxBodyBytes
