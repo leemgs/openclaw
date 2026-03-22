@@ -72,3 +72,16 @@ Example `models.json`:
 When `auth: "basic"` is used, OpenClaw will include the following header in every request to the provider's `baseUrl`:
 
 `Authorization: Basic <your_api_key>`
+
+## Configuration via Onboarding Command
+
+You can also use the interactive onboarding command to configure custom inference APIs:
+
+```bash
+pnpm openclaw onboard --install-daemon
+```
+
+When prompted for an LLM provider, you can:
+
+- Select **Owl** for pre-configured custom inference (using `Basic` authentication).
+- Select **Custom Provider** and choose **Basic Auth** from the **Authentication Mode** menu to manually configure any other custom endpoint.

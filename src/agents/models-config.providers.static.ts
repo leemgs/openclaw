@@ -233,15 +233,16 @@ const NVIDIA_DEFAULT_COST = {
 };
 
 const OPENAI_CODEX_BASE_URL = "https://chatgpt.com/backend-api";
-const OWL_BASE_URL = "https://inference-web-api.mycloud.com/custom_modelo-owl-ultra-think/v1";
-const OWL_DEFAULT_MODEL_ID = "custom_model2-37b-instruct";
-const OWL_DEFAULT_CONTEXT_WINDOW = 128000;
-const OWL_DEFAULT_MAX_TOKENS = 8192;
-const OWL_DEFAULT_COST = {
-  input: 0,
-  output: 0,
-  cacheRead: 0,
-  cacheWrite: 0,
+export const OWL_BASE_URL =
+  "https://inference-web-api.mycloud.com/custom_modelo-owl-ultra-think/v1";
+export const OWL_DEFAULT_MODEL_ID = "custom_model2-37b-instruct";
+export const OWL_DEFAULT_CONTEXT_WINDOW = 120000;
+export const OWL_DEFAULT_MAX_TOKENS = 4096;
+export const OWL_DEFAULT_COST = {
+  input: 0.1,
+  output: 0.1,
+  cacheRead: 0.05,
+  cacheWrite: 0.05,
 };
 
 export function buildMinimaxProvider(): ProviderConfig {

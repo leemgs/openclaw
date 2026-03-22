@@ -33,8 +33,9 @@ export {
   applyVeniceProviderConfig,
   applyVercelAiGatewayConfig,
   applyVercelAiGatewayProviderConfig,
-  applyXaiConfig,
   applyXaiProviderConfig,
+  applyOwlConfig,
+  applyOwlProviderConfig,
   applyXiaomiConfig,
   applyXiaomiProviderConfig,
   applyZaiConfig,
@@ -92,6 +93,7 @@ export {
   setXiaomiApiKey,
   setVolcengineApiKey,
   setZaiApiKey,
+  setOwlApiKey,
   setXaiApiKey,
   setModelStudioApiKey,
   writeOAuthCredentials,
@@ -103,6 +105,7 @@ export {
   MISTRAL_DEFAULT_MODEL_REF,
   XAI_DEFAULT_MODEL_REF,
   MODELSTUDIO_DEFAULT_MODEL_REF,
+  OWL_DEFAULT_MODEL_REF,
 } from "./onboard-auth.credentials.js";
 export {
   buildKilocodeModelDefinition,

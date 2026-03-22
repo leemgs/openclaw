@@ -132,6 +132,12 @@ const AUTH_CHOICE_GROUP_DEFS: {
     choices: ["modelstudio-api-key-cn", "modelstudio-api-key"],
   },
   {
+    value: "owl",
+    label: "Owl",
+    hint: "API key (Basic auth)",
+    choices: ["owl-api-key"],
+  },
+  {
     value: "copilot",
     label: "Copilot",
     hint: "GitHub + local proxy",
@@ -329,6 +335,7 @@ const BASE_AUTH_CHOICE_OPTIONS: ReadonlyArray<AuthChoiceOption> = [
     label: "Coding Plan API Key for Global/Intl (subscription)",
     hint: "Endpoint: coding-intl.dashscope.aliyuncs.com",
   },
+  { value: "owl-api-key", label: "Owl API key" },
   { value: "custom-api-key", label: "Custom Provider" },
 ];
 

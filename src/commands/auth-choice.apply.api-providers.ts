@@ -58,6 +58,7 @@ import {
   MOONSHOT_DEFAULT_MODEL_REF,
   MISTRAL_DEFAULT_MODEL_REF,
   SYNTHETIC_DEFAULT_MODEL_REF,
+  OWL_DEFAULT_MODEL_REF,
   TOGETHER_DEFAULT_MODEL_REF,
   VENICE_DEFAULT_MODEL_REF,
   VERCEL_AI_GATEWAY_DEFAULT_MODEL_REF,
@@ -78,12 +79,15 @@ import {
   setVercelAiGatewayApiKey,
   setXiaomiApiKey,
   setZaiApiKey,
+  setOwlApiKey,
   ZAI_DEFAULT_MODEL_REF,
   MODELSTUDIO_DEFAULT_MODEL_REF,
   applyModelStudioConfig,
   applyModelStudioConfigCn,
   applyModelStudioProviderConfig,
   applyModelStudioProviderConfigCn,
+  applyOwlConfig,
+  applyOwlProviderConfig,
   setModelStudioApiKey,
 } from "./onboard-auth.js";
 import type { AuthChoice, SecretInputMode } from "./onboard-types.js";
@@ -378,6 +382,23 @@ const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProv
     applyProviderConfig: applySyntheticProviderConfig,
     normalize: (value) => String(value ?? "").trim(),
     validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+  },
+  "owl-api-key": {
+    provider: "owl",
+    profileId: "owl:default",
+    expectedProviders: ["owl"],
+    envLabel: "OWL_API_KEY",
+    promptMessage: "Enter Owl API key",
+    setCredential: setOwlApiKey,
+    defaultModel: OWL_DEFAULT_MODEL_REF,
+    applyDefaultConfig: applyOwlConfig,
+    applyProviderConfig: applyOwlProviderConfig,
+    noteDefault: OWL_DEFAULT_MODEL_REF,
+    noteMessage: [
+      "Owl provides high-performance custom inference.",
+      "Get your API key (Basic auth) from your provider.",
+    ].join("\n"),
+    noteTitle: "Owl",
   },
 };
 

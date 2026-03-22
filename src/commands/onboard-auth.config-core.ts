@@ -6,8 +6,11 @@ import {
 import {
   buildKilocodeProvider,
   buildKimiCodingProvider,
+  buildOwlProvider,
   buildQianfanProvider,
   buildXiaomiProvider,
+  OWL_BASE_URL,
+  OWL_DEFAULT_MODEL_ID,
   QIANFAN_DEFAULT_MODEL_ID,
   XIAOMI_DEFAULT_MODEL_ID,
 } from "../agents/models-config.providers.js";
@@ -40,6 +43,7 @@ import {
   XIAOMI_DEFAULT_MODEL_REF,
   ZAI_DEFAULT_MODEL_REF,
   XAI_DEFAULT_MODEL_REF,
+  OWL_DEFAULT_MODEL_REF,
 } from "./onboard-auth.credentials.js";
 export {
   applyCloudflareAiGatewayConfig,
@@ -665,4 +669,29 @@ export function applyModelStudioConfig(cfg: OpenClawConfig): OpenClawConfig {
 export function applyModelStudioConfigCn(cfg: OpenClawConfig): OpenClawConfig {
   const next = applyModelStudioProviderConfigCn(cfg);
   return applyAgentDefaultModelPrimary(next, MODELSTUDIO_DEFAULT_MODEL_REF);
+}
+
+export function applyOwlProviderConfig(cfg: OpenClawConfig): OpenClawConfig {
+  const models = { ...cfg.agents?.defaults?.models };
+  models[OWL_DEFAULT_MODEL_REF] = {
+    ...models[OWL_DEFAULT_MODEL_REF],
+    alias: models[OWL_DEFAULT_MODEL_REF]?.alias ?? "Owl",
+  };
+
+  const defaultModel = buildOwlProvider().models[0];
+
+  return applyProviderConfigWithDefaultModel(cfg, {
+    agentModels: models,
+    providerId: "owl",
+    api: "openai-completions",
+    baseUrl: OWL_BASE_URL,
+    defaultModel,
+    defaultModelId: OWL_DEFAULT_MODEL_ID,
+    auth: "basic",
+  });
+}
+
+export function applyOwlConfig(cfg: OpenClawConfig): OpenClawConfig {
+  const next = applyOwlProviderConfig(cfg);
+  return applyAgentDefaultModelPrimary(next, OWL_DEFAULT_MODEL_REF);
 }
