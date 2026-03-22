@@ -3,316 +3,21 @@ summary: "Web search configuration for Tavily, SearXNG, and Grok"
 read_when:
   - You want to use Tavily or Grok for web search
   - You want to set up a self-hosted SearXNG instance
-title: "Web Search Providers"
+title: "Web Search Overview"
 ---
 
 # Web search providers
 
 OpenClaw supports multiple web search providers via the `web_search` tool. You can configure them in `~/.openclaw/openclaw.json` or using environment variables.
 
-## Tavily
+## Supported Providers
 
-[Tavily](https://tavily.com/) is a search engine optimized for AI agents.
+- **[Tavily](/tavily-search)**: Optimized for AI agents. Fast and reliable.
+- **[SearXNG (Self-hosted)](/searxng-search)**: Free, privacy-respecting metasearch engine you can host yourself.
+- **[Perplexity / OpenRouter](#perplexity--openrouter)**: High-quality AI-driven search.
+- **[Grok Search (xAI)](#grok-search-xai)**: Web search via the xAI Responses API.
 
-1. **Environment Variable:** Set `TAVILY_API_KEY` in your environment.
-2. **Configuration:** Update `~/.openclaw/openclaw.json`:
-
-```json
-{
-  "tools": {
-    "web": {
-      "search": {
-        "provider": "tavily",
-        "tavily": {
-          "apiKey": "your-tavily-api-key"
-        }
-      }
-    }
-  }
-}
-```
-
-### Freshness support
-
-Tavily supports the `freshness` parameter (`pd`, `pw`, `pm`, `py`) which maps to its `days` parameter (1, 7, 30, and 365 days respectively) to filter for recent content.
-
-## SearXNG (Self-hosted)
-
-[SearXNG](https://github.com/searxng/searxng) is a free, privacy-respecting metasearch engine you can host yourself. It is the recommended choice for local or private search workflows.
-
-### 1. Installation
-
-The easiest way to run SearXNG is using Docker.
-
-#### Basic Run
-
-```bash
-docker run -d -p 8080:8080 --name searxng searxng/searxng
-```
-
-#### Recommended Run (with persistence)
-
-To customize SearXNG settings, mount a local folder for configuration:
-
-```bash
-mkdir -p ./searxng
-docker run -d \
-  -p 8080:8080 \
-  -v $(pwd)/searxng:/etc/searxng \
-  --name searxng \
-  searxng/searxng
-```
-
-### 2. SearXNG Configuration (`settings.yml`)
-
-OpenClaw requires SearXNG to support JSON output. You must enable it in your `settings.yml` (located in `/etc/searxng` inside the container).
-
-```yaml
-# settings.yml
-use_default_settings: true
-
-server:
-  port: 8080
-  bind_address: "0.0.0.0"
-  secret_key: "change_this_to_a_random_string"
-
-search:
-  formats:
-    - html
-    - json # CRITICAL: Must be enabled for OpenClaw
-```
-
-### 3. OpenClaw Configuration
-
-Update your `~/.openclaw/openclaw.json` to point to your instance.
-
-```json
-{
-  "tools": {
-    "web": {
-      "search": {
-        "provider": "searxng",
-        "allowPrivateNetwork": true,
-        "searxng": {
-          "baseUrl": "http://10.251.1.32:8080"
-        }
-      }
-    }
-  }
-}
-```
-
-- **`baseUrl`**: Use the IP address or hostname of your SearXNG server. If running on the same machine as OpenClaw, you can use `http://localhost:8080`.
-- **`allowPrivateNetwork`**: Set this to `true` if your SearXNG instance is on a local/private IP (like `10.x.x.x` or `192.168.x.x`) or `localhost`.
-
-### 4. Troubleshooting
-
-#### 403 Forbidden Error
-
-If you receive a 403 Forbidden error (e.g., when asking for weather in Mattermost), it usually indicates that SearXNG's bot-detection or the missing JSON format is blocking the request.
-
-**Potential causes:**
-
-- Missing `json` format in `settings.yml`.
-- Server-side restrictions (rate limiting, IP blocking via the `Limiter` plugin).
-- Misconfigured SearXNG instance.
-
-##### Resolution Method 1: Modify inside the running container
-
-1.  **Identify the container:**
-    ```bash
-    docker ps | grep searxng
-    ```
-2.  **Enter the container:**
-    ```bash
-    docker exec -it {container_name} sh
-    ```
-3.  **Locate and edit `settings.yml`:**
-
-    ```bash
-    find / -name "settings.yml" 2>/dev/null
-    vi /etc/searxng/settings.yml
-    ```
-
-    Add `json` to `formats` and comment out the `Limiter` if you are on a private network:
-
-    ```yaml
-    search:
-      formats:
-        - html
-        - json # ← Add this
-
-    enabled_plugins:
-      # - 'Limiter' # ← Comment out for personal/private instances
-      - "Basic Calculator"
-      - "Hash plugin"
-    ```
-
-    > [!WARNING]
-    > For public instances, keep the `Limiter` enabled. Only disable it for internal or private network use.
-
-4.  **Restart the container:**
-    ```bash
-    exit
-    docker restart {container_name}
-    ```
-
-##### Resolution Method 2: Volume Mounting (Recommended)
-
-Mount a host-side `settings.yml` to ensure settings persist after container updates or removals.
-
-1.  **Copy the config from the container:**
-    ```bash
-    docker cp {container_id}:/etc/searxng/settings.yml ~/searxng-settings.yml
-    ```
-2.  **Edit the file on your host:**
-    Add `json` to `formats` and disable `Limiter` as described in Method 1.
-3.  **Restart with the volume mount:**
-    ```bash
-    docker stop searxng
-    docker rm searxng
-    docker run -d \
-      --name searxng \
-      -p 8080:8080 \
-      -v ~/searxng-settings.yml:/etc/searxng/settings.yml \
-      searxng/searxng
-    ```
-
-##### Verify the fix (curl)
-
-Verify that the JSON endpoint works manually:
-
-```bash
-curl -X GET "http://localhost:8080/search?q=test&format=json" \
-  -H "User-Agent: Mozilla/5.0" \
-  -H "Accept-Language: en-US,en;q=0.9"
-```
-
-If you receive a JSON response, the configuration is correct. If you still see a 403, re-examine `settings.yml`.
-
-#### Engine Errors (Timeout, Access Denied, Too Many Requests)
-
-Self-hosted SearXNG instances often face blocking from major search engines (Google, Brave, DuckDuckGo) due to bot-detection or shared IP reputation.
-
-**Symptoms:**
-
-- `engine timeout` or `ConnectTimeout` in logs.
-- `Access Denied`, `Too many requests`, or `Parsing Error` in the UI.
-- `json.decoder.JSONDecodeError: Extra data` in the SearXNG logs.
-
-**Resolution:**
-
-1.  **Increase Timeouts:** Some engines are slow or throttled. Increase the global and engine-specific timeouts in `settings.yml`.
-2.  **Disable Blocked Engines:** If an engine (like Google or Brave) consistently blocks your IP, it is better to disable it to avoid delays.
-3.  **Tune Engines:** Configure problematic engines explicitly.
-
-**Example enhanced `settings.yml`:**
-
-```yaml
-# settings.yml
-use_default_settings: true
-
-server:
-  port: 8080
-  bind_address: "0.0.0.0"
-  secret_key: "your_password_key_string"
-
-search:
-  formats:
-    - html
-    - json
-  default_lang: "ko" # Optional: Set default search language
-
-engines:
-  # ❌ Disable engines commonly blocking IPs (Access Denied / Too Many Requests)
-  - name: google
-    disabled: true
-  - name: brave
-    disabled: true
-  - name: startpage
-    disabled: true
-  - name: duckduckgo
-    disabled: true
-
-  # ✅ Enable stable engines with increased timeouts
-  - name: bing
-    timeout: 10.0
-    shortcut: bi
-    disabled: false
-  - name: yahoo
-    timeout: 10.0
-    shortcut: yh
-    disabled: false
-  - name: mojeek
-    timeout: 10.0
-    shortcut: mjk
-    disabled: false
-  - name: qwant
-    timeout: 10.0
-    shortcut: qw
-    disabled: false
-  - name: wikipedia
-    timeout: 10.0
-    shortcut: wp
-    disabled: false
-  - name: wikidata
-    timeout: 10.0
-    shortcut: wd
-    disabled: false
-
-outgoing:
-  request_timeout: 10.0
-  pool_connections: 100
-  pool_maxsize: 20
-```
-
-Restart your SearXNG container after applying these changes.
-
-#### Freshness & Language Support
-
-SearXNG supports:
-
-- **`freshness`**: Values (`pd`, `pw`, `pm`, `py`) map to SearXNG's `time_range` filter (`day`, `week`, `month`, `year`).
-- **`language`**: ISO 639-1 language codes (e.g., `en`, `ko`, `de`) to filter results by language.
-
-### 5. Running SearXNG at boot (systemd)
-
-To ensure SearXNG starts automatically when your system boots, you can create a systemd service unit. While Docker containers can be set to `--restart always`, using systemd allows for better integration with other system services and logging.
-
-**Example: `searxng.service` (Docker-based)**
-
-1.  **Create the service file:**
-    ```bash
-    sudo vi /etc/systemd/system/searxng.service
-    ```
-2.  **Add the following content:**
-
-    ```ini
-    [Unit]
-    Description=SearXNG Docker Container
-    After=docker.service
-    Requires=docker.service
-
-    [Service]
-    TimeoutStartSec=0
-    Restart=always
-    ExecStartPre=-/usr/bin/docker stop searxng
-    ExecStartPre=-/usr/bin/docker rm searxng
-    ExecStart=/usr/bin/docker run --name searxng -p 8080:8080 -v /etc/searxng/settings.yml:/etc/searxng/settings.yml searxng/searxng
-    ExecStop=/usr/bin/docker stop searxng
-
-    [Install]
-    WantedBy=multi-user.target
-    ```
-
-    _(Ensure the volume path `-v` matches your actual `settings.yml` location on the host.)_
-
-3.  **Enable and start the service:**
-    ```bash
-    sudo systemctl daemon-reload
-    sudo systemctl enable searxng
-    sudo systemctl start searxng
-    ```
+---
 
 ## Perplexity / OpenRouter
 
@@ -366,11 +71,13 @@ OpenClaw supports [Perplexity AI](https://www.perplexity.ai/) for web search. It
 }
 ```
 
-### Gateway & Authentication Errors
+---
+
+## Gateway & Authentication Errors
 
 While configuring web search, you may encounter gateway-level security errors if your connection is not properly authorized or secured.
 
-#### Origin not allowed
+### Origin not allowed
 
 **Error:** `origin not allowed (open the Control UI from the gateway host or allow it in gateway.controlUi.allowedOrigins)`
 
@@ -389,7 +96,7 @@ Update `gateway.controlUi.allowedOrigins` in your `openclaw.json` to include the
 }
 ```
 
-#### Device identity required
+### Device identity required
 
 **Error:** `device identity required` or `control ui requires device identity (use HTTPS or localhost secure context)`
 
@@ -415,7 +122,7 @@ OpenClaw uses device identity to secure the connection between your browser and 
 > [!WARNING]
 > Disabling device auth or allowing insecure auth exposes your gateway to potential session hijacking. Only use these settings on trusted private networks.
 
-#### Plaintext WebSocket blocked on Private Network
+### Plaintext WebSocket blocked on Private Network
 
 **Error:** `SECURITY ERROR: Gateway URL "ws://..." uses plaintext ws:// to a non-loopback address.`
 
@@ -435,18 +142,11 @@ Or run it in one line:
 OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 pnpm openclaw onboard --install-daemon
 ```
 
-**Summary**
-
-- **Cause**: Customizing to use `bind: "lan"` with a private IP, but the enforced security policy blocks `ws://` (plaintext) connections.
-- **Result**: The gateway connection is recognized as failed, and the TUI/WEB selection menu is skipped.
-- **Solution**: Manually allow security warnings by setting the `OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1` environment variable.
-
-Running the command above will make the TUI/WEB selection menu appear again.
+---
 
 ## Final checklist
 
-- Verify `~/.openclaw/openclaw.json` contains the correct `baseUrl` and `allowPrivateNetwork` settings.
-- Ensure SearXNG `settings.yml` has `json` format enabled and, if needed, the limiter plugin disabled.
+- Verify `~/.openclaw/openclaw.json` contains the correct `allowPrivateNetwork` settings.
 - Restart the OpenClaw daemon to apply configuration changes:
   ```bash
   pkill -f openclaw
@@ -456,7 +156,6 @@ Running the command above will make the TUI/WEB selection menu appear again.
   ```
   /ask search "weather tomorrow" freshness=pd
   ```
-  If the result appears without a 403 error, the setup is complete.
 
 ## Usage Example
 
