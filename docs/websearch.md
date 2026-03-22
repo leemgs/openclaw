@@ -212,17 +212,58 @@ Self-hosted SearXNG instances often face blocking from major search engines (Goo
 # settings.yml
 use_default_settings: true
 
+server:
+  port: 8080
+  bind_address: "0.0.0.0"
+  secret_key: "your_password_key_string"
+
+search:
+  formats:
+    - html
+    - json
+  default_lang: "ko" # Optional: Set default search language
+
 engines:
-  - name: duckduckgo
-    timeout: 5.0 # Increase from default 3.0
+  # ❌ Disable engines commonly blocking IPs (Access Denied / Too Many Requests)
   - name: google
-    disabled: true # Disable if consistently blocked (Access Denied)
+    disabled: true
   - name: brave
-    timeout: 4.0
+    disabled: true
+  - name: startpage
+    disabled: true
+  - name: duckduckgo
+    disabled: true
+
+  # ✅ Enable stable engines with increased timeouts
+  - name: bing
+    timeout: 10.0
+    shortcut: bi
+    disabled: false
+  - name: yahoo
+    timeout: 10.0
+    shortcut: yh
+    disabled: false
+  - name: mojeek
+    timeout: 10.0
+    shortcut: mjk
+    disabled: false
+  - name: qwant
+    timeout: 10.0
+    shortcut: qw
+    disabled: false
+  - name: wikipedia
+    timeout: 10.0
+    shortcut: wp
+    disabled: false
+  - name: wikidata
+    timeout: 10.0
+    shortcut: wd
+    disabled: false
 
 outgoing:
-  request_timeout: 5.0 # Global request timeout
-  pool_timeout: 10.0 # Global pool timeout
+  request_timeout: 10.0
+  pool_connections: 100
+  pool_maxsize: 20
 ```
 
 Restart your SearXNG container after applying these changes.
