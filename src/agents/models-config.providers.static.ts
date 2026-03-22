@@ -233,6 +233,16 @@ const NVIDIA_DEFAULT_COST = {
 };
 
 const OPENAI_CODEX_BASE_URL = "https://chatgpt.com/backend-api";
+const OWL_BASE_URL = "https://inference-web-api.mycloud.com/custom_modelo-owl-ultra-think/v1";
+const OWL_DEFAULT_MODEL_ID = "custom_model2-37b-instruct";
+const OWL_DEFAULT_CONTEXT_WINDOW = 128000;
+const OWL_DEFAULT_MAX_TOKENS = 8192;
+const OWL_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
 
 export function buildMinimaxProvider(): ProviderConfig {
   return {
@@ -543,5 +553,24 @@ export function buildKilocodeProvider(): ProviderConfig {
       contextWindow: model.contextWindow ?? KILOCODE_DEFAULT_CONTEXT_WINDOW,
       maxTokens: model.maxTokens ?? KILOCODE_DEFAULT_MAX_TOKENS,
     })),
+  };
+}
+
+export function buildOwlProvider(): ProviderConfig {
+  return {
+    baseUrl: OWL_BASE_URL,
+    api: "openai-completions",
+    auth: "basic",
+    models: [
+      {
+        id: OWL_DEFAULT_MODEL_ID,
+        name: "Custom Owl Instruct",
+        reasoning: true,
+        input: ["text"],
+        cost: OWL_DEFAULT_COST,
+        contextWindow: OWL_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: OWL_DEFAULT_MAX_TOKENS,
+      },
+    ],
   };
 }

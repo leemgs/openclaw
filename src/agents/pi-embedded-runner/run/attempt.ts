@@ -51,7 +51,7 @@ import { DEFAULT_CONTEXT_TOKENS } from "../../defaults.js";
 import { resolveOpenClawDocsPath } from "../../docs-path.js";
 import { isTimeoutError } from "../../failover-error.js";
 import { resolveImageSanitizationLimits } from "../../image-sanitization.js";
-import { resolveModelAuthMode } from "../../model-auth.js";
+import { getApiKeyForModel, resolveModelAuthMode } from "../../model-auth.js";
 import { normalizeProviderId, resolveDefaultModelForAgent } from "../../model-selection.js";
 import { supportsModelTools } from "../../model-tool-support.js";
 import { createConfiguredOllamaStreamFn } from "../../ollama-stream.js";
@@ -1456,6 +1456,19 @@ export async function runEmbeddedAttempt(
         : [];
 
       const allCustomTools = [...customTools, ...clientToolDefs];
+
+      const resolvedAuth = await getApiKeyForModel({
+        model: params.model,
+        cfg: params.config,
+        agentDir,
+      });
+      if (resolvedAuth.mode === "basic" && resolvedAuth.apiKey) {
+        if (!params.model.headers) {
+          (params.model as { headers?: Record<string, string> }).headers = {};
+        }
+        (params.model as { headers: Record<string, string> }).headers["Authorization"] =
+          `Basic ${resolvedAuth.apiKey}`; // pragma: allowlist secret
+      }
 
       ({ session } = await createAgentSession({
         cwd: resolvedWorkspace,

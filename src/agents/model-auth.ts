@@ -113,7 +113,13 @@ function resolveProviderAuthOverride(
 ): ModelProviderAuthMode | undefined {
   const entry = resolveProviderConfig(cfg, provider);
   const auth = entry?.auth;
-  if (auth === "api-key" || auth === "aws-sdk" || auth === "oauth" || auth === "token") {
+  if (
+    auth === "api-key" ||
+    auth === "aws-sdk" ||
+    auth === "oauth" ||
+    auth === "token" ||
+    auth === "basic"
+  ) {
     return auth;
   }
   return undefined;
@@ -210,7 +216,7 @@ export type ResolvedProviderAuth = {
   apiKey?: string;
   profileId?: string;
   source: string;
-  mode: "api-key" | "oauth" | "token" | "aws-sdk";
+  mode: "api-key" | "oauth" | "token" | "aws-sdk" | "basic";
 };
 
 export async function resolveApiKeyForProvider(params: {
@@ -224,6 +230,7 @@ export async function resolveApiKeyForProvider(params: {
   const { provider, cfg, profileId, preferredProfile } = params;
   const store = params.store ?? ensureAuthProfileStore(params.agentDir);
 
+  const authOverride = resolveProviderAuthOverride(cfg, provider);
   if (profileId) {
     const resolved = await resolveApiKeyForProfile({
       cfg,
@@ -234,16 +241,23 @@ export async function resolveApiKeyForProvider(params: {
     if (!resolved) {
       throw new Error(`No credentials found for profile "${profileId}".`);
     }
-    const mode = store.profiles[profileId]?.type;
+    const profileType = store.profiles[profileId]?.type;
+    const resolvedMode =
+      authOverride === "basic" && profileType === "api_key"
+        ? ("basic" as const)
+        : profileType === "oauth"
+          ? ("oauth" as const)
+          : profileType === "token"
+            ? ("token" as const)
+            : ("api-key" as const);
     return {
       apiKey: resolved.apiKey,
       profileId,
       source: `profile:${profileId}`,
-      mode: mode === "oauth" ? "oauth" : mode === "token" ? "token" : "api-key",
+      mode: resolvedMode,
     };
   }
 
-  const authOverride = resolveProviderAuthOverride(cfg, provider);
   if (authOverride === "aws-sdk") {
     return resolveAwsSdkAuthInfo();
   }
@@ -263,12 +277,20 @@ export async function resolveApiKeyForProvider(params: {
         agentDir: params.agentDir,
       });
       if (resolved) {
-        const mode = store.profiles[candidate]?.type;
+        const profileType = store.profiles[candidate]?.type;
+        const resolvedMode =
+          authOverride === "basic" && profileType === "api_key"
+            ? ("basic" as const)
+            : profileType === "oauth"
+              ? ("oauth" as const)
+              : profileType === "token"
+                ? ("token" as const)
+                : ("api-key" as const);
         return {
           apiKey: resolved.apiKey,
           profileId: candidate,
           source: `profile:${candidate}`,
-          mode: mode === "oauth" ? "oauth" : mode === "token" ? "token" : "api-key",
+          mode: resolvedMode,
         };
       }
     } catch (err) {
@@ -281,13 +303,22 @@ export async function resolveApiKeyForProvider(params: {
     return {
       apiKey: envResolved.apiKey,
       source: envResolved.source,
-      mode: envResolved.source.includes("OAUTH_TOKEN") ? "oauth" : "api-key",
+      mode:
+        authOverride === "basic"
+          ? "basic"
+          : envResolved.source.includes("OAUTH_TOKEN")
+            ? "oauth"
+            : "api-key",
     };
   }
 
   const customKey = resolveUsableCustomProviderApiKey({ cfg, provider });
   if (customKey) {
-    return { apiKey: customKey.apiKey, source: customKey.source, mode: "api-key" };
+    return {
+      apiKey: customKey.apiKey,
+      source: customKey.source,
+      mode: authOverride === "basic" ? "basic" : "api-key",
+    };
   }
 
   const syntheticLocalAuth = resolveSyntheticLocalProviderAuth({ cfg, provider });

@@ -33,6 +33,7 @@ import {
   buildModelStudioProvider,
   buildMoonshotProvider,
   buildNvidiaProvider,
+  buildOwlProvider,
   buildOpenAICodexProvider,
   buildOpenrouterProvider,
   buildQianfanProvider,
@@ -48,6 +49,7 @@ export {
   buildKimiCodingProvider,
   buildKilocodeProvider,
   buildNvidiaProvider,
+  buildOwlProvider,
   buildModelStudioProvider,
   buildQianfanProvider,
   buildXiaomiProvider,
@@ -673,6 +675,7 @@ const SIMPLE_IMPLICIT_PROVIDER_LOADERS: ImplicitProviderLoader[] = [
     ...(await buildKilocodeProviderWithDiscovery()),
     apiKey,
   })),
+  withApiKey("owl", async ({ apiKey }) => ({ ...buildOwlProvider(), apiKey })),
 ];
 
 const PROFILE_IMPLICIT_PROVIDER_LOADERS: ImplicitProviderLoader[] = [
