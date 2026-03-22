@@ -190,6 +190,43 @@ curl -X GET "http://localhost:8080/search?q=test&format=json" \
 
 If you receive a JSON response, the configuration is correct. If you still see a 403, re-examine `settings.yml`.
 
+#### Engine Errors (Timeout, Access Denied, Too Many Requests)
+
+Self-hosted SearXNG instances often face blocking from major search engines (Google, Brave, DuckDuckGo) due to bot-detection or shared IP reputation.
+
+**Symptoms:**
+
+- `engine timeout` or `ConnectTimeout` in logs.
+- `Access Denied`, `Too many requests`, or `Parsing Error` in the UI.
+- `json.decoder.JSONDecodeError: Extra data` in the SearXNG logs.
+
+**Resolution:**
+
+1.  **Increase Timeouts:** Some engines are slow or throttled. Increase the global and engine-specific timeouts in `settings.yml`.
+2.  **Disable Blocked Engines:** If an engine (like Google or Brave) consistently blocks your IP, it is better to disable it to avoid delays.
+3.  **Tune Engines:** Configure problematic engines explicitly.
+
+**Example enhanced `settings.yml`:**
+
+```yaml
+# settings.yml
+use_default_settings: true
+
+engines:
+  - name: duckduckgo
+    timeout: 5.0 # Increase from default 3.0
+  - name: google
+    disabled: true # Disable if consistently blocked (Access Denied)
+  - name: brave
+    timeout: 4.0
+
+outgoing:
+  request_timeout: 5.0 # Global request timeout
+  pool_timeout: 10.0 # Global pool timeout
+```
+
+Restart your SearXNG container after applying these changes.
+
 #### Freshness & Language Support
 
 SearXNG supports:
