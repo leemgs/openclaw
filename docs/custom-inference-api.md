@@ -10,15 +10,14 @@ The `owl` provider is pre-configured to work with custom inference servers hosti
 
 #### Configuration via Environment Variables
 
-You can enable the `owl` provider by setting one of the following environment variables:
+You can enable the `owl` provider by setting the following environment variable:
 
-- `API_AAH_KEY`
 - `OWL_API_KEY`
 
 Example:
 
 ```bash
-export API_AAH_KEY="your_custom_token"
+export OWL_API_KEY="your_custom_token"
 ```
 
 #### Pre-configured Endpoint

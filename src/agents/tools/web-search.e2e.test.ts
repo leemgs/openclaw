@@ -16,7 +16,6 @@ const {
   resolveTavilyApiKey,
   resolveTavilyConfig,
   freshnessToTavilyDays,
-  freshnessToSearXNGTimeRange,
 } = __testing;
 
 describe("web_search tavily config resolution", () => {
@@ -171,23 +170,6 @@ describe("freshnessToTavilyDays", () => {
   });
 });
 
-describe("freshnessToSearXNGTimeRange", () => {
-  it("maps Brave shortcuts to SearXNG time_range values", () => {
-    expect(freshnessToSearXNGTimeRange("pd")).toBe("day");
-    expect(freshnessToSearXNGTimeRange("pw")).toBe("week");
-    expect(freshnessToSearXNGTimeRange("pm")).toBe("month");
-    expect(freshnessToSearXNGTimeRange("py")).toBe("year");
-  });
-
-  it("returns undefined for date ranges (not supported by SearXNG)", () => {
-    expect(freshnessToSearXNGTimeRange("2024-01-01to2024-01-31")).toBeUndefined();
-  });
-
-  it("returns undefined for undefined/empty input", () => {
-    expect(freshnessToSearXNGTimeRange(undefined)).toBeUndefined();
-    expect(freshnessToSearXNGTimeRange("")).toBeUndefined();
-  });
-});
 
 describe("web_search grok config resolution", () => {
   it("uses config apiKey when provided", () => {

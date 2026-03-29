@@ -719,7 +719,6 @@ export async function startGatewayServer(
     log,
     logHooks,
     logPlugins,
-    gatewayMode: runtimeConfig.gatewayMode,
     getReadiness,
   });
   let bonjourStop: (() => Promise<void>) | null = null;
