@@ -47,6 +47,9 @@ function buildInputOptions(options: InputOptionsArg): InputOptionsReturn {
     if (log.code === "PLUGIN_TIMINGS") {
       return true;
     }
+    if (log.code === "UNRESOLVED_IMPORT") {
+      return [log.message, log.id, log.importer].filter(Boolean).some((text) => text!.includes("node_modules/"));
+    }
     if (log.code !== "EVAL") {
       return false;
     }
