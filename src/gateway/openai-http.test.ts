@@ -508,22 +508,34 @@ describe("OpenAI-compatible HTTP API (e2e)", () => {
       }
 
       {
-        mockAgentOnce([{ text: "ok" }]);
+        mockAgentOnce([{ text: "tool follow-up ok" }]);
         const res = await postChatCompletions(port, {
           model: "openclaw",
           messages: [
-            { role: "system", content: "You are a helpful assistant." },
             { role: "user", content: "What's the weather?" },
-            { role: "assistant", content: "Checking the weather." },
-            { role: "tool", content: "Sunny, 70F." },
+            {
+              role: "assistant",
+              content: null,
+              tool_calls: [
+                {
+                  id: "call1",
+                  type: "function",
+                  function: { name: "get_weather", arguments: '{"location":"London"}' },
+                },
+              ],
+            },
+            { role: "tool", name: "get_weather", content: "Sunny, 70F." },
           ],
         });
         expect(res.status).toBe(200);
 
         const message = getFirstAgentMessage();
         expectMessageContext(message, {
-          history: ["User: What's the weather?", "Assistant: Checking the weather."],
-          current: ["Tool: Sunny, 70F."],
+          history: [
+            "User: What's the weather?",
+            'Assistant: [Tool Call: get_weather({"location":"London"})]',
+          ],
+          current: ["Tool:get_weather: Sunny, 70F."],
         });
         await res.text();
       }

@@ -175,7 +175,7 @@ export async function handleToolsInvokeHttpRequest(
   }
   const body = (bodyUnknown ?? {}) as ToolsInvokeBody;
 
-  const toolName = typeof body.tool === "string" ? body.tool.trim() : "";
+  let toolName = typeof body.tool === "string" ? body.tool.trim() : "";
   if (!toolName) {
     sendInvalidRequest(res, "tools.invoke requires body.tool");
     return true;
@@ -304,7 +304,15 @@ export async function handleToolsInvokeHttpRequest(
   const gatewayDenySet = new Set(gatewayDenyNames);
   const gatewayFiltered = subagentFiltered.filter((t) => !gatewayDenySet.has(t.name));
 
-  const tool = gatewayFiltered.find((t) => t.name === toolName);
+  let tool = gatewayFiltered.find((t) => t.name === toolName);
+  if (!tool && toolName === "search") {
+    const webSearch = gatewayFiltered.find((t) => t.name === "web_search");
+    if (webSearch) {
+      tool = webSearch;
+      toolName = "web_search";
+    }
+  }
+
   if (!tool) {
     sendJson(res, 404, {
       ok: false,

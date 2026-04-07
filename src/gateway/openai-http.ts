@@ -338,6 +338,29 @@ function buildAgentPrompt(
     const role = typeof msg.role === "string" ? msg.role.trim() : "";
     const content = extractTextContent(msg.content).trim();
     const hasImage = extractImageUrls(msg.content).length > 0;
+
+    const toolCalls = (msg as { tool_calls?: unknown }).tool_calls;
+    const functionCall = (msg as { function_call?: unknown }).function_call;
+    let messageBody = content;
+
+    if (!messageBody && (toolCalls || functionCall)) {
+      if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+        messageBody = toolCalls
+          .map((tc: unknown) => {
+            const tcObj = tc as Record<string, unknown>;
+            const tcFn = (tcObj.function as Record<string, unknown>) || tcObj;
+            const tcName = (tcFn.name as string) || "";
+            const tcArgs =
+              typeof tcFn.arguments === "string" ? tcFn.arguments : JSON.stringify(tcFn.arguments);
+            return `[Tool Call: ${tcName}(${tcArgs})]`;
+          })
+          .join("\n");
+      } else if (functionCall && typeof functionCall === "object") {
+        const fc = functionCall as { name?: string; arguments?: string };
+        messageBody = `[Tool Call: ${fc.name}(${fc.arguments})]`;
+      }
+    }
+
     if (!role) {
       continue;
     }
@@ -356,9 +379,10 @@ function buildAgentPrompt(
     // Keep the image-only placeholder scoped to the active user turn so we don't
     // mention historical image-only turns whose bytes are intentionally not replayed.
     const messageContent =
-      normalizedRole === "user" && !content && hasImage && i === activeUserMessageIndex
+      normalizedRole === "user" && !messageBody && hasImage && i === activeUserMessageIndex
         ? IMAGE_ONLY_USER_MESSAGE
-        : content;
+        : messageBody;
+
     if (!messageContent) {
       continue;
     }
