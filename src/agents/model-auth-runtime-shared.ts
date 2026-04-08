@@ -9,7 +9,7 @@ export type ResolvedProviderAuth = {
   apiKey?: string;
   profileId?: string;
   source: string;
-  mode: "api-key" | "oauth" | "token" | "aws-sdk";
+  mode: "api-key" | "oauth" | "token" | "aws-sdk" | "basic";
 };
 
 export function resolveAwsSdkEnvVarName(env: NodeJS.ProcessEnv = process.env): string | undefined {

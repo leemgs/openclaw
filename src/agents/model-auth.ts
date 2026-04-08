@@ -131,7 +131,13 @@ function resolveProviderAuthOverride(
 ): ModelProviderAuthMode | undefined {
   const entry = resolveProviderConfig(cfg, provider);
   const auth = entry?.auth;
-  if (auth === "api-key" || auth === "aws-sdk" || auth === "oauth" || auth === "token") {
+  if (
+    auth === "api-key" ||
+    auth === "aws-sdk" ||
+    auth === "oauth" ||
+    auth === "token" ||
+    auth === "basic"
+  ) {
     return auth;
   }
   return undefined;

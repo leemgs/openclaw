@@ -1,3 +1,6 @@
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { listBundledPluginMetadata } from "../plugins/bundled-plugin-metadata.js";
 import { resolveBundledPluginPublicSurfacePath } from "../plugins/public-surface-runtime.js";
 import type { ProviderConfig } from "./models-config.providers.secrets.js";
 
