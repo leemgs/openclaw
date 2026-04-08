@@ -1,63 +1,85 @@
 import type { OpenClawConfig } from "openclaw/plugin-sdk/config-runtime";
-import { normalizeSecretInput } from "openclaw/plugin-sdk/provider-auth";
-import { normalizeResolvedSecretInputString } from "openclaw/plugin-sdk/secret-input";
+import {
+  normalizeResolvedSecretInputString,
+  normalizeSecretInput,
+} from "openclaw/plugin-sdk/secret-input";
 
-export const DEFAULT_SEARXNG_BASE_URL = "http://localhost:8080";
-export const DEFAULT_SEARXNG_TIMEOUT_SECONDS = 30;
-
-type SearXNGSearchConfig =
-  | {
-      apiKey?: unknown;
-      baseUrl?: string;
-    }
-  | undefined;
-
-type PluginEntryConfig = {
+type SearxngPluginConfig = {
   webSearch?: {
-    apiKey?: unknown;
-    baseUrl?: string;
+    baseUrl?: unknown;
+    categories?: string;
+    language?: string;
   };
 };
 
-export function resolveSearXNGSearchConfig(cfg?: OpenClawConfig): SearXNGSearchConfig {
-  const pluginConfig = cfg?.plugins?.entries?.searxng?.config as PluginEntryConfig;
-  const pluginWebSearch = pluginConfig?.webSearch;
-  if (pluginWebSearch && typeof pluginWebSearch === "object" && !Array.isArray(pluginWebSearch)) {
-    return pluginWebSearch;
+function normalizeConfiguredString(value: unknown, path: string): string | undefined {
+  try {
+    return normalizeSecretInput(
+      normalizeResolvedSecretInputString({
+        value,
+        path,
+      }),
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+function readInlineEnvSecretRefValue(value: unknown, env: NodeJS.ProcessEnv): string | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  const record = value as { source?: unknown; id?: unknown };
+  if (record.source !== "env" || typeof record.id !== "string") {
+    return undefined;
+  }
+  return normalizeSecretInput(env[record.id]);
+}
+
+function normalizeTrimmedString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function normalizeBaseUrl(value: string | undefined): string | undefined {
+  return value?.replace(/\/+$/u, "") || undefined;
+}
+
+export function resolveSearxngWebSearchConfig(
+  config?: OpenClawConfig,
+): SearxngPluginConfig["webSearch"] | undefined {
+  const pluginConfig = config?.plugins?.entries?.searxng?.config as SearxngPluginConfig | undefined;
+  const webSearch = pluginConfig?.webSearch;
+  if (webSearch && typeof webSearch === "object" && !Array.isArray(webSearch)) {
+    return webSearch;
   }
   return undefined;
 }
 
-function normalizeConfiguredSecret(value: unknown, path: string): string | undefined {
-  return normalizeSecretInput(
-    normalizeResolvedSecretInputString({
-      value,
-      path,
-    }),
-  );
-}
-
-export function resolveSearXNGApiKey(cfg?: OpenClawConfig): string | undefined {
-  const search = resolveSearXNGSearchConfig(cfg);
+export function resolveSearxngBaseUrl(
+  config?: OpenClawConfig,
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined {
+  const webSearch = resolveSearxngWebSearchConfig(config);
   return (
-    normalizeConfiguredSecret(search?.apiKey, "plugins.entries.searxng.config.webSearch.apiKey") ||
-    normalizeSecretInput(process.env.SEARXNG_API_KEY) ||
-    undefined
+    normalizeBaseUrl(
+      normalizeConfiguredString(
+        webSearch?.baseUrl,
+        "plugins.entries.searxng.config.webSearch.baseUrl",
+      ),
+    ) ??
+    normalizeBaseUrl(readInlineEnvSecretRefValue(webSearch?.baseUrl, env)) ??
+    normalizeBaseUrl(normalizeSecretInput(env.SEARXNG_BASE_URL))
   );
 }
 
-export function resolveSearXNGBaseUrl(cfg?: OpenClawConfig): string {
-  const search = resolveSearXNGSearchConfig(cfg);
-  const configured =
-    (typeof search?.baseUrl === "string" ? search.baseUrl.trim() : "") ||
-    normalizeSecretInput(process.env.SEARXNG_BASE_URL) ||
-    "";
-  return configured || DEFAULT_SEARXNG_BASE_URL;
+export function resolveSearxngCategories(config?: OpenClawConfig): string | undefined {
+  return normalizeTrimmedString(resolveSearxngWebSearchConfig(config)?.categories);
 }
 
-export function resolveSearXNGTimeoutSeconds(override?: number): number {
-  if (typeof override === "number" && Number.isFinite(override) && override > 0) {
-    return Math.floor(override);
-  }
-  return DEFAULT_SEARXNG_TIMEOUT_SECONDS;
+export function resolveSearxngLanguage(config?: OpenClawConfig): string | undefined {
+  return normalizeTrimmedString(resolveSearxngWebSearchConfig(config)?.language);
 }

@@ -1,19 +1,21 @@
 {
   "id": "searxng",
-  "providerAuthEnvVars": {
-    "searxng": ["SEARXNG_API_KEY"]
-  },
   "uiHints": {
-    "webSearch.apiKey": {
-      "label": "SearXNG API Key",
-      "help": "Optional SearXNG API key (only if your instance requires it).",
-      "sensitive": true
-    },
     "webSearch.baseUrl": {
       "label": "SearXNG Base URL",
-      "help": "The URL of your SearXNG instance (e.g., http://localhost:8080).",
-      "placeholder": "http://localhost:8080"
+      "help": "Base URL of your SearXNG instance, such as http://localhost:8080 or https://search.example.com/searxng."
+    },
+    "webSearch.categories": {
+      "label": "SearXNG Categories",
+      "help": "Optional comma-separated categories such as general, news, or science."
+    },
+    "webSearch.language": {
+      "label": "SearXNG Language",
+      "help": "Optional language code for results such as en, de, or fr."
     }
+  },
+  "contracts": {
+    "webSearchProviders": ["searxng"]
   },
   "configSchema": {
     "type": "object",
@@ -23,10 +25,13 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "apiKey": {
+          "baseUrl": {
             "type": ["string", "object"]
           },
-          "baseUrl": {
+          "categories": {
+            "type": "string"
+          },
+          "language": {
             "type": "string"
           }
         }

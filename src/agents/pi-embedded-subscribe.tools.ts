@@ -1,6 +1,7 @@
 import { getChannelPlugin, normalizeChannelId } from "../channels/plugins/index.js";
 import { normalizeTargetForProvider } from "../infra/outbound/target-normalization.js";
 import { splitMediaFromOutput } from "../media/parse.js";
+import { pluginRegistrationContractRegistry } from "../plugins/contracts/registry.js";
 import { truncateUtf16Safe } from "../utils.js";
 import { collectTextContentBlocks } from "./content-blocks.js";
 import { type MessagingToolSend } from "./pi-embedded-messaging.js";
@@ -146,6 +147,7 @@ const TRUSTED_TOOL_RESULT_MEDIA = new Set([
   "memory_get",
   "memory_search",
   "message",
+  "music_generate",
   "nodes",
   "process",
   "read",
@@ -156,28 +158,59 @@ const TRUSTED_TOOL_RESULT_MEDIA = new Set([
   "sessions_spawn",
   "subagents",
   "tts",
+  "video_generate",
   "web_fetch",
   "web_search",
+  "x_search",
   "write",
 ]);
+const TRUSTED_BUNDLED_PLUGIN_MEDIA_TOOLS = new Set(
+  pluginRegistrationContractRegistry.flatMap((entry) => entry.toolNames),
+);
 const HTTP_URL_RE = /^https?:\/\//i;
 
-export function isToolResultMediaTrusted(toolName?: string): boolean {
-  if (!toolName) {
+function readToolResultDetails(result: unknown): Record<string, unknown> | undefined {
+  if (!result || typeof result !== "object") {
+    return undefined;
+  }
+  const record = result as Record<string, unknown>;
+  return record.details && typeof record.details === "object" && !Array.isArray(record.details)
+    ? (record.details as Record<string, unknown>)
+    : undefined;
+}
+
+function readToolResultStatus(result: unknown): string | undefined {
+  const status = readToolResultDetails(result)?.status;
+  return typeof status === "string" ? status.trim().toLowerCase() : undefined;
+}
+
+function isExternalToolResult(result: unknown): boolean {
+  const details = readToolResultDetails(result);
+  if (!details) {
+    return false;
+  }
+  return typeof details.mcpServer === "string" || typeof details.mcpTool === "string";
+}
+
+export function isToolResultMediaTrusted(toolName?: string, result?: unknown): boolean {
+  if (!toolName || isExternalToolResult(result)) {
     return false;
   }
   const normalized = normalizeToolName(toolName);
-  return TRUSTED_TOOL_RESULT_MEDIA.has(normalized);
+  return (
+    TRUSTED_TOOL_RESULT_MEDIA.has(normalized) || TRUSTED_BUNDLED_PLUGIN_MEDIA_TOOLS.has(normalized)
+  );
 }
 
 export function filterToolResultMediaUrls(
   toolName: string | undefined,
   mediaUrls: string[],
+  result?: unknown,
 ): string[] {
   if (mediaUrls.length === 0) {
     return mediaUrls;
   }
-  if (isToolResultMediaTrusted(toolName)) {
+  if (isToolResultMediaTrusted(toolName, result)) {
     return mediaUrls;
   }
   return mediaUrls.filter((url) => HTTP_URL_RE.test(url.trim()));
@@ -203,10 +236,7 @@ export type ToolResultMediaArtifact = {
 function readToolResultDetailsMedia(
   result: Record<string, unknown>,
 ): Record<string, unknown> | undefined {
-  const details =
-    result.details && typeof result.details === "object" && !Array.isArray(result.details)
-      ? (result.details as Record<string, unknown>)
-      : undefined;
+  const details = readToolResultDetails(result);
   const media =
     details?.media && typeof details.media === "object" && !Array.isArray(details.media)
       ? (details.media as Record<string, unknown>)
@@ -297,20 +327,19 @@ export function extractToolResultMediaPaths(result: unknown): string[] {
 }
 
 export function isToolResultError(result: unknown): boolean {
-  if (!result || typeof result !== "object") {
+  const normalized = readToolResultStatus(result);
+  if (!normalized) {
     return false;
   }
-  const record = result as { details?: unknown };
-  const details = record.details;
-  if (!details || typeof details !== "object") {
-    return false;
-  }
-  const status = (details as { status?: unknown }).status;
-  if (typeof status !== "string") {
-    return false;
-  }
-  const normalized = status.trim().toLowerCase();
   return normalized === "error" || normalized === "timeout";
+}
+
+export function isToolResultTimedOut(result: unknown): boolean {
+  const normalizedStatus = readToolResultStatus(result);
+  if (normalizedStatus === "timeout") {
+    return true;
+  }
+  return readToolResultDetails(result)?.timedOut === true;
 }
 
 export function extractToolErrorMessage(result: unknown): string | undefined {

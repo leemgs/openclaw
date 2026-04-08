@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveOpenClawAgentDir } from "../agents/agent-paths.js";
 import { collectProviderApiKeys } from "../agents/live-auth-keys.js";
+import { isLiveTestEnabled } from "../agents/live-test-helpers.js";
 import { resolveApiKeyForProvider } from "../agents/model-auth.js";
 import type { OpenClawConfig } from "../config/config.js";
 import { loadConfig } from "../config/config.js";
@@ -22,7 +23,7 @@ import {
 } from "./live-test-helpers.js";
 import { generateImage } from "./runtime.js";
 
-const LIVE = isTruthyEnvValue(process.env.LIVE) || isTruthyEnvValue(process.env.OPENCLAW_LIVE_TEST);
+const LIVE = isLiveTestEnabled();
 const REQUIRE_PROFILE_KEYS = isTruthyEnvValue(process.env.OPENCLAW_LIVE_REQUIRE_PROFILE_KEYS);
 const describeLive = LIVE ? describe : describe.skip;
 
@@ -172,6 +173,18 @@ describeLive("image generation live (provider sweep)", () => {
         prompt:
           "Create a minimal flat illustration of an orange cat face sticker on a white background.",
         size: "1024x1024",
+      });
+    }
+    if (availableProviders.includes("vydra")) {
+      liveCases.push({
+        id: "vydra:default-generate",
+        providerId: "vydra",
+        modelRef:
+          envModelMap.get("vydra") ??
+          configuredModels.get("vydra") ??
+          DEFAULT_LIVE_IMAGE_MODELS.vydra,
+        prompt:
+          "Create a minimal flat illustration of an orange cat face sticker on a white background.",
       });
     }
 

@@ -121,6 +121,7 @@ export async function runTavilySearch(
       apiKey,
       body,
       errorLabel: "Tavily Search",
+      extraHeaders: { "X-Client-Source": "openclaw" },
     },
     async (response) => (await response.json()) as Record<string, unknown>,
   );
@@ -202,6 +203,7 @@ export async function runTavilyExtract(
       apiKey,
       body,
       errorLabel: "Tavily Extract",
+      extraHeaders: { "X-Client-Source": "openclaw" },
     },
     async (response) => (await response.json()) as Record<string, unknown>,
   );
