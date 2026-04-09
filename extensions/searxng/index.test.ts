@@ -25,7 +25,7 @@ describe("searxng plugin", () => {
 
     const provider = registrations.webSearchProviders[0] as Record<string, unknown>;
     expect(provider.id).toBe("searxng");
-    expect(provider.autoDetectOrder).toBe(80);
-    expect(provider.envVars).toEqual(["SEARXNG_API_KEY"]);
+    expect(provider.autoDetectOrder).toBe(200);
+    expect(provider.envVars).toEqual(["SEARXNG_BASE_URL"]);
   });
 });

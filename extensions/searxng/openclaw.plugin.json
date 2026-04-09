@@ -28,6 +28,9 @@
           "baseUrl": {
             "type": ["string", "object"]
           },
+          "apiKey": {
+            "type": ["string", "object"]
+          },
           "categories": {
             "type": "string"
           },
