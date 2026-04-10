@@ -106,13 +106,13 @@ curl "wttr.in/London.png"
 **"What's the weather?"**
 
 ```bash
-curl -s "wttr.in/London?format=%l:+%c+%t+(feels+like+%f),+%w+wind,+%h+humidity"
+curl -s -m 10 "wttr.in/London?format=%l:+%c+%t+(feels+like+%f),+%w+wind,+%h+humidity"
 ```
 
 **"Will it rain?"**
 
 ```bash
-curl -s "wttr.in/London?format=%l:+%c+%p"
+curl -s -m 10 "wttr.in/London?format=%l:+%c+%p"
 ```
 
 **"Weekend forecast"**
