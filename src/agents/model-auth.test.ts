@@ -1,5 +1,6 @@
 import { streamSimpleOpenAICompletions, type Model } from "@mariozechner/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { isBasicAuthCredential } from "./model-auth-runtime-shared.js";
 import { clearRuntimeConfigSnapshot, setRuntimeConfigSnapshot } from "../config/config.js";
 import type { ModelProviderConfig } from "../config/config.js";
 import { withFetchPreconnect } from "../test-utils/fetch-mock.js";
@@ -920,5 +921,62 @@ describe("applyAuthHeaderOverride", () => {
       "X-Custom": "keep",
       Authorization: "Bearer test-api-key",
     });
+  });
+
+  it("injects Authorization Basic header when auth is basic", () => {
+    const result = applyAuthHeaderOverride(
+      baseModel,
+      { apiKey: "test-api-key", source: "env", mode: "basic" },
+      {
+        models: {
+          providers: {
+            google: {
+              baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+              api: "openai-completions",
+              auth: "basic",
+              models: [],
+            },
+          },
+        },
+      },
+    );
+
+    expect(result.headers).toEqual({ Authorization: "Basic test-api-key" });
+  });
+
+  it("injects Authorization Basic header when key is detected as basic auth (base64 encoded user:pass)", () => {
+    const result = applyAuthHeaderOverride(
+      baseModel,
+      { apiKey: "dXNlcjpwYXNz", source: "env", mode: "api-key" },
+      {
+        models: {
+          providers: {
+            google: {
+              baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+              api: "openai-completions",
+              models: [],
+            },
+          },
+        },
+      },
+    );
+
+    expect(result.headers).toEqual({ Authorization: "Basic dXNlcjpwYXNz" });
+  });
+});
+
+describe("isBasicAuthCredential", () => {
+  it("returns true for keys containing colon", () => {
+    expect(isBasicAuthCredential("user:pass")).toBe(true);
+  });
+
+  it("returns true for base64 encoded strings containing colon", () => {
+    expect(isBasicAuthCredential("NjUwYTBmOWEtNWU0My0xMWVkLThkZGItZWE4OTMyYmYxYTZkOjllODQyMDYxLWEwNmQtNGFlNS1iM2Q4LTc3NzU4NTQ4MTliNQ==")).toBe(true);
+    expect(isBasicAuthCredential("dXNlcjpwYXNz")).toBe(true);
+  });
+
+  it("returns false for regular API keys", () => {
+    expect(isBasicAuthCredential("sk-proj-12345")).toBe(false);
+    expect(isBasicAuthCredential("my-secret-key")).toBe(false);
   });
 });

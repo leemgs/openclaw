@@ -32,3 +32,20 @@ export function requireApiKey(auth: ResolvedProviderAuth, provider: string): str
   }
   throw new Error(`No API key resolved for provider "${provider}" (auth mode: ${auth.mode}).`);
 }
+
+export function isBasicAuthCredential(apiKey: string): boolean {
+  const trimmed = apiKey.trim();
+  if (trimmed.includes(":")) {
+    return true;
+  }
+  try {
+    const decoded = Buffer.from(trimmed, "base64").toString("utf-8");
+    if (decoded.includes(":") && /^[\w\d\-:_@\.]+$/.test(decoded)) {
+      return true;
+    }
+  } catch {
+    // Ignore base64 decoding errors
+  }
+  return false;
+}
+

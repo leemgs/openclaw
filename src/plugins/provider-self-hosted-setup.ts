@@ -1,5 +1,6 @@
 import type { ApiKeyCredential, AuthProfileCredential } from "../agents/auth-profiles/types.js";
 import { upsertAuthProfileWithLock } from "../agents/auth-profiles/upsert-with-lock.js";
+import { isBasicAuthCredential } from "../agents/model-auth-runtime-shared.js";
 import {
   SELF_HOSTED_DEFAULT_CONTEXT_WINDOW,
   SELF_HOSTED_DEFAULT_COST,
@@ -122,6 +123,7 @@ function buildOpenAICompatibleSelfHostedProviderConfig(params: {
   reasoning?: boolean;
   contextWindow?: number;
   maxTokens?: number;
+  auth?: "api-key" | "aws-sdk" | "oauth" | "token" | "basic";
 }): { config: OpenClawConfig; modelId: string; modelRef: string; profileId: string } {
   const modelRef = `${params.providerId}/${params.modelId}`;
   const profileId = `${params.providerId}:default`;
@@ -137,6 +139,7 @@ function buildOpenAICompatibleSelfHostedProviderConfig(params: {
             baseUrl: params.baseUrl,
             api: "openai-completions",
             apiKey: params.providerApiKey,
+            ...(params.auth ? { auth: params.auth } : undefined),
             models: [
               {
                 id: params.modelId,
@@ -220,6 +223,7 @@ export async function promptAndConfigureOpenAICompatibleSelfHostedProvider(
     .replace(/\/+$/, "");
   const apiKey = String(apiKeyRaw ?? "").trim();
   const modelId = String(modelIdRaw ?? "").trim();
+  const isBasic = isBasicAuthCredential(apiKey);
   const credential: AuthProfileCredential = {
     type: "api_key",
     provider: params.providerId,
@@ -231,6 +235,7 @@ export async function promptAndConfigureOpenAICompatibleSelfHostedProvider(
     baseUrl,
     providerApiKey: params.defaultApiKeyEnvVar,
     modelId,
+    auth: isBasic ? "basic" : undefined,
     input: params.input,
     reasoning: params.reasoning,
     contextWindow: params.contextWindow,
@@ -345,12 +350,14 @@ export async function configureOpenAICompatibleSelfHostedProviderNonInteractive(
     return null;
   }
 
+  const isBasic = isBasicAuthCredential(resolved.apiKey);
   const configured = buildOpenAICompatibleSelfHostedProviderConfig({
     cfg: params.ctx.config,
     providerId: params.providerId,
     baseUrl,
     providerApiKey: params.defaultApiKeyEnvVar,
     modelId,
+    auth: isBasic ? "basic" : undefined,
     input: params.input,
     reasoning: params.reasoning,
     contextWindow: params.contextWindow,

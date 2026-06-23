@@ -29,6 +29,7 @@ import {
   NON_ENV_SECRETREF_MARKER,
 } from "./model-auth-markers.js";
 import {
+  isBasicAuthCredential,
   requireApiKey,
   resolveAwsSdkEnvVarName,
   type ResolvedProviderAuth,
@@ -118,9 +119,14 @@ export function shouldPreferExplicitConfigApiKeyAuth(
   provider: string,
 ): boolean {
   const providerConfig = resolveProviderConfig(cfg, provider);
+  if (!providerConfig) {
+    return false;
+  }
+  const auth = resolveProviderAuthOverride(cfg, provider);
+  const rawKey = normalizeOptionalSecretInput(providerConfig.apiKey);
+  const isBasic = auth === "basic" || (rawKey && isBasicAuthCredential(rawKey));
   return (
-    resolveProviderAuthOverride(cfg, provider) === "api-key" &&
-    providerConfig !== undefined &&
+    (auth === "api-key" || isBasic) &&
     hasExplicitProviderApiKeyConfig(providerConfig)
   );
 }
@@ -368,11 +374,12 @@ export async function resolveApiKeyForProvider(params: {
       throw new Error(`No credentials found for profile "${profileId}".`);
     }
     const mode = store.profiles[profileId]?.type;
+    const isBasic = mode === "basic" || isBasicAuthCredential(resolved.apiKey);
     const result: ResolvedProviderAuth = {
       apiKey: resolved.apiKey,
       profileId,
       source: `profile:${profileId}`,
-      mode: mode === "oauth" ? "oauth" : mode === "token" ? "token" : "api-key",
+      mode: mode === "oauth" ? "oauth" : mode === "token" ? "token" : isBasic ? "basic" : "api-key",
     };
     // When the resolved key is a provider-owned synthetic profile marker and
     // the caller has not locked this profile, fall through to env/config
@@ -400,10 +407,11 @@ export async function resolveApiKeyForProvider(params: {
   if (shouldPreferExplicitConfigApiKeyAuth(cfg, provider)) {
     const customKey = resolveUsableCustomProviderApiKey({ cfg, provider });
     if (customKey) {
+      const isBasic = authOverride === "basic" || isBasicAuthCredential(customKey.apiKey);
       return {
         apiKey: customKey.apiKey,
         source: customKey.source,
-        mode: "api-key",
+        mode: isBasic ? "basic" : "api-key",
       };
     }
   }
@@ -426,8 +434,9 @@ export async function resolveApiKeyForProvider(params: {
       });
       if (resolved) {
         const mode = store.profiles[candidate]?.type;
+        const isBasic = mode === "basic" || isBasicAuthCredential(resolved.apiKey);
         const resolvedMode: ResolvedProviderAuth["mode"] =
-          mode === "oauth" ? "oauth" : mode === "token" ? "token" : "api-key";
+          mode === "oauth" ? "oauth" : mode === "token" ? "token" : isBasic ? "basic" : "api-key";
         const result: ResolvedProviderAuth = {
           apiKey: resolved.apiKey,
           profileId: candidate,
@@ -453,9 +462,12 @@ export async function resolveApiKeyForProvider(params: {
 
   const envResolved = resolveEnvApiKey(provider);
   if (envResolved) {
+    const isBasic = envResolved.source.includes("BASIC") || isBasicAuthCredential(envResolved.apiKey);
     const resolvedMode: ResolvedProviderAuth["mode"] = envResolved.source.includes("OAUTH_TOKEN")
       ? "oauth"
-      : "api-key";
+      : isBasic
+        ? "basic"
+        : "api-key";
     const result: ResolvedProviderAuth = {
       apiKey: envResolved.apiKey,
       source: envResolved.source,
@@ -466,7 +478,8 @@ export async function resolveApiKeyForProvider(params: {
 
   const customKey = resolveUsableCustomProviderApiKey({ cfg, provider });
   if (customKey) {
-    const result = { apiKey: customKey.apiKey, source: customKey.source, mode: "api-key" as const };
+    const isBasic = authOverride === "basic" || isBasicAuthCredential(customKey.apiKey);
+    const result = { apiKey: customKey.apiKey, source: customKey.source, mode: isBasic ? ("basic" as const) : ("api-key" as const) };
     return result;
   }
 
@@ -696,7 +709,12 @@ export function applyAuthHeaderOverride<T extends Model<Api>>(
     return model;
   }
   const providerConfig = resolveProviderConfig(cfg, model.provider);
-  if (!providerConfig?.authHeader) {
+  const isBasic =
+    providerConfig?.auth === "basic" ||
+    auth.mode === "basic" ||
+    isBasicAuthCredential(auth.apiKey);
+
+  if (!providerConfig?.authHeader && !isBasic) {
     return model;
   }
 
@@ -710,7 +728,11 @@ export function applyAuthHeaderOverride<T extends Model<Api>>(
       }
     }
   }
-  headers.Authorization = `Bearer ${auth.apiKey}`;
+  if (isBasic) {
+    headers.Authorization = `Basic ${auth.apiKey}`;
+  } else {
+    headers.Authorization = `Bearer ${auth.apiKey}`;
+  }
 
   return {
     ...model,
