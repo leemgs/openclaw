@@ -7,7 +7,7 @@ import { registerProviders, requireProvider } from "../../../src/plugins/contrac
 const resolveCopilotApiTokenMock = vi.hoisted(() => vi.fn());
 const buildOllamaProviderMock = vi.hoisted(() => vi.fn());
 const buildVllmProviderMock = vi.hoisted(() => vi.fn());
-const buildSglangProviderMock = vi.hoisted(() => vi.fn());
+const buildCustomLlmProviderMock = vi.hoisted(() => vi.fn());
 const ensureAuthProfileStoreMock = vi.hoisted(() => vi.fn());
 const listProfilesForProviderMock = vi.hoisted(() => vi.fn());
 const bundledProviderModules = vi.hoisted(() => ({
@@ -31,8 +31,8 @@ const bundledProviderModules = vi.hoisted(() => ({
   qwenIndexModuleUrl: new URL("../../../extensions/qwen/index.ts", import.meta.url).href,
   ollamaApiModuleId: new URL("../../../extensions/ollama/api.js", import.meta.url).pathname,
   ollamaIndexModuleUrl: new URL("../../../extensions/ollama/index.ts", import.meta.url).href,
-  sglangApiModuleId: new URL("../../../extensions/sglang/api.js", import.meta.url).pathname,
-  sglangIndexModuleUrl: new URL("../../../extensions/sglang/index.ts", import.meta.url).href,
+  customLlmApiModuleId: new URL("../../../extensions/custom_llm/api.js", import.meta.url).pathname,
+  customLlmIndexModuleUrl: new URL("../../../extensions/custom_llm/index.ts", import.meta.url).href,
   vllmApiModuleId: new URL("../../../extensions/vllm/api.js", import.meta.url).pathname,
   vllmIndexModuleUrl: new URL("../../../extensions/vllm/index.ts", import.meta.url).href,
 }));
@@ -44,7 +44,7 @@ type DiscoveryState = {
   githubCopilotProvider?: ProviderHandle;
   ollamaProvider?: ProviderHandle;
   vllmProvider?: ProviderHandle;
-  sglangProvider?: ProviderHandle;
+  customLlmProvider?: ProviderHandle;
   minimaxProvider?: ProviderHandle;
   minimaxPortalProvider?: ProviderHandle;
   modelStudioProvider?: ProviderHandle;
@@ -55,7 +55,7 @@ type BundledProviderUnderTest =
   | "github-copilot"
   | "ollama"
   | "vllm"
-  | "sglang"
+  | "custom_llm"
   | "minimax"
   | "modelstudio"
   | "cloudflare-ai-gateway";
@@ -213,13 +213,13 @@ function installDiscoveryHooks(
         buildVllmProvider: (...args: unknown[]) => buildVllmProviderMock(...args),
       };
     });
-    vi.doMock(bundledProviderModules.sglangApiModuleId, async () => {
+    vi.doMock(bundledProviderModules.customLlmApiModuleId, async () => {
       return {
-        SGLANG_DEFAULT_API_KEY_ENV_VAR: "SGLANG_API_KEY",
-        SGLANG_DEFAULT_BASE_URL: "http://127.0.0.1:30000/v1",
-        SGLANG_MODEL_PLACEHOLDER: "Qwen/Qwen3-8B",
-        SGLANG_PROVIDER_LABEL: "SGLang",
-        buildSglangProvider: (...args: unknown[]) => buildSglangProviderMock(...args),
+        CUSTOM_LLM_DEFAULT_API_KEY_ENV_VAR: "CUSTOM_LLM_API_KEY",
+        CUSTOM_LLM_DEFAULT_BASE_URL: "http://127.0.0.1:30000/v1",
+        CUSTOM_LLM_MODEL_PLACEHOLDER: "Qwen/Qwen3-8B",
+        CUSTOM_LLM_PROVIDER_LABEL: "Custom LLM",
+        buildCustomLlmProvider: (...args: unknown[]) => buildCustomLlmProviderMock(...args),
       };
     });
     ({ runProviderCatalog: state.runProviderCatalog } =
@@ -249,11 +249,14 @@ function installDiscoveryHooks(
       state.vllmProvider = requireProvider(await registerProviders(vllmPlugin), "vllm");
     }
 
-    if (providerIds.includes("sglang")) {
-      const { default: sglangPlugin } = await importBundledProviderPlugin<{
+    if (providerIds.includes("custom_llm")) {
+      const { default: custom_llmPlugin } = await importBundledProviderPlugin<{
         default: Parameters<typeof registerProviders>[0];
-      }>(bundledProviderModules.sglangIndexModuleUrl);
-      state.sglangProvider = requireProvider(await registerProviders(sglangPlugin), "sglang");
+      }>(bundledProviderModules.customLlmIndexModuleUrl);
+      state.customLlmProvider = requireProvider(
+        await registerProviders(custom_llmPlugin),
+        "custom_llm",
+      );
     }
 
     if (providerIds.includes("minimax")) {
@@ -289,7 +292,7 @@ function installDiscoveryHooks(
     resolveCopilotApiTokenMock.mockReset();
     buildOllamaProviderMock.mockReset();
     buildVllmProviderMock.mockReset();
-    buildSglangProviderMock.mockReset();
+    buildCustomLlmProviderMock.mockReset();
     ensureAuthProfileStoreMock.mockReset();
     listProfilesForProviderMock.mockReset();
   });
@@ -465,14 +468,14 @@ export function describeVllmProviderDiscoveryContract() {
   });
 }
 
-export function describeSglangProviderDiscoveryContract() {
+export function describeCustomLlmProviderDiscoveryContract() {
   const state = {} as DiscoveryState;
 
-  describe("sglang provider discovery contract", () => {
-    installDiscoveryHooks(state, ["sglang"]);
+  describe("custom_llm provider discovery contract", () => {
+    installDiscoveryHooks(state, ["custom_llm"]);
 
     it("keeps self-hosted discovery provider-owned", async () => {
-      buildSglangProviderMock.mockResolvedValueOnce({
+      buildCustomLlmProviderMock.mockResolvedValueOnce({
         baseUrl: "http://127.0.0.1:30000/v1",
         api: "openai-completions",
         models: [{ id: "Qwen/Qwen3-8B", name: "Qwen3-8B" }],
@@ -480,18 +483,18 @@ export function describeSglangProviderDiscoveryContract() {
 
       await expect(
         runCatalog(state, {
-          provider: state.sglangProvider!,
+          provider: state.customLlmProvider!,
           config: {},
           env: {
-            SGLANG_API_KEY: "env-sglang-key",
+            CUSTOM_LLM_API_KEY: "env-custom-llm-key",
           } as NodeJS.ProcessEnv,
           resolveProviderApiKey: () => ({
-            apiKey: "SGLANG_API_KEY",
-            discoveryApiKey: "env-sglang-key",
+            apiKey: "CUSTOM_LLM_API_KEY",
+            discoveryApiKey: "env-custom-llm-key",
           }),
           resolveProviderAuth: () => ({
-            apiKey: "SGLANG_API_KEY",
-            discoveryApiKey: "env-sglang-key",
+            apiKey: "CUSTOM_LLM_API_KEY",
+            discoveryApiKey: "env-custom-llm-key",
             mode: "api_key",
             source: "env",
           }),
@@ -500,12 +503,12 @@ export function describeSglangProviderDiscoveryContract() {
         provider: {
           baseUrl: "http://127.0.0.1:30000/v1",
           api: "openai-completions",
-          apiKey: "SGLANG_API_KEY",
+          apiKey: "CUSTOM_LLM_API_KEY",
           models: [{ id: "Qwen/Qwen3-8B", name: "Qwen3-8B" }],
         },
       });
-      expect(buildSglangProviderMock).toHaveBeenCalledWith({
-        apiKey: "env-sglang-key",
+      expect(buildCustomLlmProviderMock).toHaveBeenCalledWith({
+        apiKey: "env-custom-llm-key",
       });
     });
   });

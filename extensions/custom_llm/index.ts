@@ -4,33 +4,33 @@ import {
   type ProviderAuthMethodNonInteractiveContext,
 } from "openclaw/plugin-sdk/plugin-entry";
 import {
-  SGLANG_DEFAULT_API_KEY_ENV_VAR,
-  SGLANG_DEFAULT_BASE_URL,
-  SGLANG_MODEL_PLACEHOLDER,
-  SGLANG_PROVIDER_LABEL,
-  buildSglangProvider,
+  CUSTOM_LLM_DEFAULT_API_KEY_ENV_VAR,
+  CUSTOM_LLM_DEFAULT_BASE_URL,
+  CUSTOM_LLM_MODEL_PLACEHOLDER,
+  CUSTOM_LLM_PROVIDER_LABEL,
+  buildCustomLlmProvider,
 } from "./api.js";
 
-const PROVIDER_ID = "sglang";
+const PROVIDER_ID = "custom_llm";
 
 async function loadProviderSetup() {
   return await import("openclaw/plugin-sdk/provider-setup");
 }
 
 export default definePluginEntry({
-  id: "sglang",
-  name: "SGLang Provider",
-  description: "Bundled SGLang provider plugin",
+  id: "custom_llm",
+  name: "Custom LLM Provider",
+  description: "Bundled Custom LLM provider plugin",
   register(api: OpenClawPluginApi) {
     api.registerProvider({
       id: PROVIDER_ID,
-      label: "SGLang",
-      docsPath: "/providers/sglang",
-      envVars: ["SGLANG_API_KEY"],
+      label: "Custom LLM",
+      docsPath: "/providers/custom_llm",
+      envVars: ["CUSTOM_LLM_API_KEY"],
       auth: [
         {
           id: "custom",
-          label: SGLANG_PROVIDER_LABEL,
+          label: CUSTOM_LLM_PROVIDER_LABEL,
           hint: "Fast self-hosted OpenAI-compatible server",
           kind: "custom",
           run: async (ctx) => {
@@ -39,10 +39,10 @@ export default definePluginEntry({
               cfg: ctx.config,
               prompter: ctx.prompter,
               providerId: PROVIDER_ID,
-              providerLabel: SGLANG_PROVIDER_LABEL,
-              defaultBaseUrl: SGLANG_DEFAULT_BASE_URL,
-              defaultApiKeyEnvVar: SGLANG_DEFAULT_API_KEY_ENV_VAR,
-              modelPlaceholder: SGLANG_MODEL_PLACEHOLDER,
+              providerLabel: CUSTOM_LLM_PROVIDER_LABEL,
+              defaultBaseUrl: CUSTOM_LLM_DEFAULT_BASE_URL,
+              defaultApiKeyEnvVar: CUSTOM_LLM_DEFAULT_API_KEY_ENV_VAR,
+              modelPlaceholder: CUSTOM_LLM_MODEL_PLACEHOLDER,
             });
           },
           runNonInteractive: async (ctx: ProviderAuthMethodNonInteractiveContext) => {
@@ -50,10 +50,10 @@ export default definePluginEntry({
             return await providerSetup.configureOpenAICompatibleSelfHostedProviderNonInteractive({
               ctx,
               providerId: PROVIDER_ID,
-              providerLabel: SGLANG_PROVIDER_LABEL,
-              defaultBaseUrl: SGLANG_DEFAULT_BASE_URL,
-              defaultApiKeyEnvVar: SGLANG_DEFAULT_API_KEY_ENV_VAR,
-              modelPlaceholder: SGLANG_MODEL_PLACEHOLDER,
+              providerLabel: CUSTOM_LLM_PROVIDER_LABEL,
+              defaultBaseUrl: CUSTOM_LLM_DEFAULT_BASE_URL,
+              defaultApiKeyEnvVar: CUSTOM_LLM_DEFAULT_API_KEY_ENV_VAR,
+              modelPlaceholder: CUSTOM_LLM_MODEL_PLACEHOLDER,
             });
           },
         },
@@ -65,23 +65,23 @@ export default definePluginEntry({
           return await providerSetup.discoverOpenAICompatibleSelfHostedProvider({
             ctx,
             providerId: PROVIDER_ID,
-            buildProvider: buildSglangProvider,
+            buildProvider: buildCustomLlmProvider,
           });
         },
       },
       wizard: {
         setup: {
-          choiceId: "sglang",
-          choiceLabel: "SGLang",
+          choiceId: "custom_llm",
+          choiceLabel: "Custom LLM",
           choiceHint: "Fast self-hosted OpenAI-compatible server",
-          groupId: "sglang",
-          groupLabel: "SGLang",
+          groupId: "custom_llm",
+          groupLabel: "Custom LLM",
           groupHint: "Fast self-hosted server",
           methodId: "custom",
         },
         modelPicker: {
-          label: "SGLang (custom)",
-          hint: "Enter SGLang URL + API key + model",
+          label: "Custom LLM (custom)",
+          hint: "Enter Custom LLM URL + API key + model",
           methodId: "custom",
         },
       },

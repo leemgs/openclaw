@@ -679,14 +679,14 @@ describe("plugin-sdk subpath exports", () => {
         "promptAndConfigureOllama",
         "promptAndConfigureVllm",
         "buildVllmProvider",
-        "buildSglangProvider",
+        "buildCustomLlmProvider",
         "OLLAMA_DEFAULT_BASE_URL",
         "OLLAMA_DEFAULT_MODEL",
         "VLLM_DEFAULT_BASE_URL",
       ],
     });
     expectSourceOmitsImportPattern("provider-setup", "./vllm.js");
-    expectSourceOmitsImportPattern("provider-setup", "./sglang.js");
+    expectSourceOmitsImportPattern("provider-setup", "./custom_llm.js");
     expectSourceMentions("provider-auth", [
       "buildOauthProviderAuthResult",
       "generatePkceVerifierChallenge",
@@ -718,11 +718,11 @@ describe("plugin-sdk subpath exports", () => {
         "discoverOpenAICompatibleSelfHostedProvider",
         "configureOpenAICompatibleSelfHostedProviderNonInteractive",
       ],
-      omits: ["buildVllmProvider", "buildSglangProvider"],
+      omits: ["buildVllmProvider", "buildCustomLlmProvider"],
     });
     expectSourceOmitsImportPattern("self-hosted-provider-setup", "./vllm.js");
-    expectSourceOmitsImportPattern("self-hosted-provider-setup", "./sglang.js");
-    expectSourceOmitsSnippet("agent-runtime", "./sglang.js");
+    expectSourceOmitsImportPattern("self-hosted-provider-setup", "./custom_llm.js");
+    expectSourceOmitsSnippet("agent-runtime", "./custom_llm.js");
     expectSourceOmitsSnippet("agent-runtime", "./vllm.js");
     expectSourceOmitsSnippet("agent-runtime", "../../extensions/");
     expectSourceOmitsSnippet("google-model-id", "./google.js");

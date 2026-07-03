@@ -237,11 +237,11 @@ describe("buildAuthChoiceOptions", () => {
         groupLabel: "vLLM",
       },
       {
-        value: "sglang",
-        label: "SGLang",
+        value: "custom_llm",
+        label: "Custom LLM",
         hint: "Fast self-hosted OpenAI-compatible server",
-        groupId: "sglang",
-        groupLabel: "SGLang",
+        groupId: "custom_llm",
+        groupLabel: "Custom LLM",
       },
     ]);
     const options = getOptions();
@@ -261,7 +261,7 @@ describe("buildAuthChoiceOptions", () => {
       "vllm",
       "opencode-go",
       "ollama",
-      "sglang",
+      "custom_llm",
     ]) {
       expect(options.some((opt) => opt.value === value)).toBe(true);
     }

@@ -705,12 +705,12 @@ Then set a model (replace with one of the IDs returned by `/v1/models`):
 
 See [/providers/vllm](/providers/vllm) for details.
 
-### SGLang
+### Custom LLM Provider
 
-SGLang ships as a bundled provider plugin for fast self-hosted
+The `custom_llm` provider ships as a bundled provider plugin for self-hosted
 OpenAI-compatible servers:
 
-- Provider: `sglang`
+- Provider: `custom_llm`
 - Auth: Optional (depends on your server)
 - Default base URL: `http://127.0.0.1:30000/v1`
 
@@ -718,7 +718,7 @@ To opt in to auto-discovery locally (any value works if your server does not
 enforce auth):
 
 ```bash
-export SGLANG_API_KEY="sglang-local"
+export CUSTOM_LLM_API_KEY="custom-llm-local"
 ```
 
 Then set a model (replace with one of the IDs returned by `/v1/models`):
@@ -726,12 +726,12 @@ Then set a model (replace with one of the IDs returned by `/v1/models`):
 ```json5
 {
   agents: {
-    defaults: { model: { primary: "sglang/your-model-id" } },
+    defaults: { model: { primary: "custom_llm/your-model-id" } },
   },
 }
 ```
 
-See [/providers/sglang](/providers/sglang) for details.
+See [/providers/custom_llm](/providers/custom_llm) for details.
 
 ### Local proxies (LM Studio, vLLM, LiteLLM, etc.)
 

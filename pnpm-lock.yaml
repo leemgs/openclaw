@@ -305,6 +305,8 @@ importers:
 
   extensions/copilot-proxy: {}
 
+  extensions/custom_llm: {}
+
   extensions/deepgram: {}
 
   extensions/deepseek: {}
@@ -632,8 +634,6 @@ importers:
   extensions/runway: {}
 
   extensions/searxng: {}
-
-  extensions/sglang: {}
 
   extensions/signal: {}
 

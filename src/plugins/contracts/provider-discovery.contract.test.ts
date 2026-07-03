@@ -4,7 +4,7 @@ import {
   describeMinimaxProviderDiscoveryContract,
   describeModelStudioProviderDiscoveryContract,
   describeOllamaProviderDiscoveryContract,
-  describeSglangProviderDiscoveryContract,
+  describeCustomLlmProviderDiscoveryContract,
   describeVllmProviderDiscoveryContract,
 } from "../../../test/helpers/plugins/provider-discovery-contract.js";
 
@@ -13,5 +13,5 @@ describeGithubCopilotProviderDiscoveryContract();
 describeMinimaxProviderDiscoveryContract();
 describeModelStudioProviderDiscoveryContract();
 describeOllamaProviderDiscoveryContract();
-describeSglangProviderDiscoveryContract();
+describeCustomLlmProviderDiscoveryContract();
 describeVllmProviderDiscoveryContract();

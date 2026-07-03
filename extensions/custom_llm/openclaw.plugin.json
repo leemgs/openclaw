@@ -1,19 +1,19 @@
 {
-  "id": "sglang",
+  "id": "custom_llm",
   "enabledByDefault": true,
-  "providers": ["sglang"],
+  "providers": ["custom_llm"],
   "providerAuthEnvVars": {
-    "sglang": ["SGLANG_API_KEY"]
+    "custom_llm": ["CUSTOM_LLM_API_KEY"]
   },
   "providerAuthChoices": [
     {
-      "provider": "sglang",
+      "provider": "custom_llm",
       "method": "custom",
-      "choiceId": "sglang",
-      "choiceLabel": "SGLang",
+      "choiceId": "custom_llm",
+      "choiceLabel": "Custom LLM",
       "choiceHint": "Fast self-hosted OpenAI-compatible server",
-      "groupId": "sglang",
-      "groupLabel": "SGLang",
+      "groupId": "custom_llm",
+      "groupLabel": "Custom LLM",
       "groupHint": "Fast self-hosted server"
     }
   ],

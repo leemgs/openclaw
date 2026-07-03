@@ -213,7 +213,7 @@ const LOCAL_EXTENSION_API_BARREL_GUARDS = [
   "open-prose",
   "phone-control",
   "copilot-proxy",
-  "sglang",
+  "custom_llm",
   "zai",
   "signal",
   "synology-chat",

@@ -1,0 +1,4 @@
+export const CUSTOM_LLM_DEFAULT_BASE_URL = "http://127.0.0.1:30000/v1";
+export const CUSTOM_LLM_PROVIDER_LABEL = "Custom LLM";
+export const CUSTOM_LLM_DEFAULT_API_KEY_ENV_VAR = "CUSTOM_LLM_API_KEY";
+export const CUSTOM_LLM_MODEL_PLACEHOLDER = "Qwen/Qwen3-8B";

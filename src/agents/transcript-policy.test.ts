@@ -21,7 +21,7 @@ vi.mock("../plugins/provider-runtime.js", () => ({
         "opencode-go",
         "ollama",
         "openrouter",
-        "sglang",
+        "custom_llm",
         "vllm",
         "xai",
         "zai",
@@ -29,7 +29,7 @@ vi.mock("../plugins/provider-runtime.js", () => ({
     ) {
       return undefined;
     }
-    if (provider === "sglang" || provider === "vllm") {
+    if (provider === "custom_llm" || provider === "vllm") {
       return {};
     }
     return {

@@ -1,8 +1,8 @@
 {
-  "name": "@openclaw/sglang-provider",
+  "name": "@openclaw/custom_llm-provider",
   "version": "2026.4.5",
   "private": true,
-  "description": "OpenClaw SGLang provider plugin",
+  "description": "OpenClaw Custom LLM provider plugin",
   "type": "module",
   "openclaw": {
     "extensions": [

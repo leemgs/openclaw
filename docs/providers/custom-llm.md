@@ -16,7 +16,7 @@ provider id, so you can name it something descriptive like `custom_llm`.
 
 Use this approach when no bundled preset fits, or when you prefer a stable,
 self-documented provider name in your own config instead of borrowing a preset
-such as `sglang`, `vllm`, or `litellm`.
+such as `custom_llm`, `vllm`, or `litellm`.
 
 ## Quick start
 
@@ -179,4 +179,4 @@ auto-discovery and guided onboarding:
 - [Ollama](/providers/ollama)
 - [vLLM](/providers/vllm)
 - [LiteLLM](/providers/litellm)
-- [SGLang](/providers/sglang)
+- [Custom LLM Provider](/providers/custom_llm)

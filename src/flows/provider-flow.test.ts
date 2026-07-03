@@ -25,14 +25,14 @@ describe("provider flow", () => {
   it("uses setup mode when resolving docs for setup contributions", () => {
     resolveProviderWizardOptions.mockReturnValue([
       {
-        value: "provider-plugin:sglang:custom",
-        label: "SGLang",
-        groupId: "sglang",
-        groupLabel: "SGLang",
+        value: "provider-plugin:custom_llm:custom",
+        label: "Custom LLM",
+        groupId: "custom_llm",
+        groupLabel: "Custom LLM",
       },
     ] as never);
     resolvePluginProviders.mockReturnValue([
-      { id: "sglang", docsPath: "/providers/sglang" },
+      { id: "custom_llm", docsPath: "/providers/custom_llm" },
     ] as never);
 
     const contributions = resolveProviderSetupFlowContributions({
@@ -47,7 +47,7 @@ describe("provider flow", () => {
       env: process.env,
       mode: "setup",
     });
-    expect(contributions[0]?.option.docs).toEqual({ path: "/providers/sglang" });
+    expect(contributions[0]?.option.docs).toEqual({ path: "/providers/custom_llm" });
     expect(contributions[0]?.source).toBe("runtime");
   });
 

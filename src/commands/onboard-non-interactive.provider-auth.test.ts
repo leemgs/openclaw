@@ -524,12 +524,12 @@ vi.mock("./onboard-non-interactive/local/auth-choice.plugin-providers.js", async
       }),
     ],
     [
-      "sglang",
+      "custom_llm",
       createSelfHostedChoice({
-        providerId: "sglang",
-        label: "SGLang",
+        providerId: "custom_llm",
+        label: "Custom LLM",
         defaultBaseUrl: "http://127.0.0.1:30000/v1",
-        defaultApiKeyEnvVar: "SGLANG_API_KEY",
+        defaultApiKeyEnvVar: "CUSTOM_LLM_API_KEY",
         modelPlaceholder: "Qwen/Qwen3-32B",
       }),
     ],
@@ -1275,32 +1275,32 @@ describe("onboard (non-interactive): provider auth", () => {
     });
   });
 
-  it("configures SGLang via the provider plugin in non-interactive mode", async () => {
-    await withOnboardEnv("openclaw-onboard-sglang-non-interactive-", async (env) => {
+  it("configures Custom LLM via the provider plugin in non-interactive mode", async () => {
+    await withOnboardEnv("openclaw-onboard-custom_llm-non-interactive-", async (env) => {
       const cfg = await runOnboardingAndReadConfig(env, {
-        authChoice: "sglang",
+        authChoice: "custom_llm",
         customBaseUrl: "http://127.0.0.1:31000/v1",
-        customApiKey: "sglang-test-key", // pragma: allowlist secret
+        customApiKey: "custom-llm-test-key", // pragma: allowlist secret
         customModelId: "Qwen/Qwen3-32B",
       });
 
-      expect(cfg.auth?.profiles?.["sglang:default"]?.provider).toBe("sglang");
-      expect(cfg.auth?.profiles?.["sglang:default"]?.mode).toBe("api_key");
-      expect(cfg.models?.providers?.sglang).toEqual({
+      expect(cfg.auth?.profiles?.["custom_llm:default"]?.provider).toBe("custom_llm");
+      expect(cfg.auth?.profiles?.["custom_llm:default"]?.mode).toBe("api_key");
+      expect(cfg.models?.providers?.custom_llm).toEqual({
         baseUrl: "http://127.0.0.1:31000/v1",
         api: "openai-completions",
-        apiKey: "SGLANG_API_KEY",
+        apiKey: "CUSTOM_LLM_API_KEY",
         models: [
           expect.objectContaining({
             id: "Qwen/Qwen3-32B",
           }),
         ],
       });
-      expect(cfg.agents?.defaults?.model?.primary).toBe("sglang/Qwen/Qwen3-32B");
+      expect(cfg.agents?.defaults?.model?.primary).toBe("custom_llm/Qwen/Qwen3-32B");
       await expectApiKeyProfile({
-        profileId: "sglang:default",
-        provider: "sglang",
-        key: "sglang-test-key",
+        profileId: "custom_llm:default",
+        provider: "custom_llm",
+        key: "custom-llm-test-key",
       });
     });
   });

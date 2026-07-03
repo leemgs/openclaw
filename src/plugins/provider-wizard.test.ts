@@ -22,28 +22,28 @@ function makeProvider(overrides: Partial<ProviderPlugin> & Pick<ProviderPlugin, 
   } satisfies ProviderPlugin;
 }
 
-function createSglangWizardProvider(params?: {
+function createCustomLlmWizardProvider(params?: {
   includeSetup?: boolean;
   includeModelPicker?: boolean;
 }) {
   return makeProvider({
-    id: "sglang",
-    label: "SGLang",
+    id: "custom_llm",
+    label: "Custom LLM",
     auth: [{ id: "server", label: "Server", kind: "custom", run: vi.fn() }],
     wizard: {
       ...((params?.includeSetup ?? true)
         ? {
             setup: {
-              choiceLabel: "SGLang setup",
-              groupId: "sglang",
-              groupLabel: "SGLang",
+              choiceLabel: "Custom LLM setup",
+              groupId: "custom_llm",
+              groupLabel: "Custom LLM",
             },
           }
         : {}),
       ...(params?.includeModelPicker
         ? {
             modelPicker: {
-              label: "SGLang server",
+              label: "Custom LLM server",
               methodId: "server",
             },
           }
@@ -52,10 +52,10 @@ function createSglangWizardProvider(params?: {
   });
 }
 
-function createSglangConfig() {
+function createCustomLlmConfig() {
   return {
     plugins: {
-      allow: ["sglang"],
+      allow: ["custom_llm"],
     },
   };
 }
@@ -73,7 +73,7 @@ function createWizardRuntimeParams(params?: {
   workspaceDir?: string;
 }) {
   return {
-    config: params?.config ?? createSglangConfig(),
+    config: params?.config ?? createCustomLlmConfig(),
     workspaceDir: params?.workspaceDir ?? DEFAULT_WORKSPACE_DIR,
     env: params?.env ?? createHomeEnv(),
   };
@@ -236,15 +236,15 @@ describe("provider wizard boundaries", () => {
 
   it("builds model-picker entries from plugin metadata and provider-method choices", () => {
     const provider = makeProvider({
-      id: "sglang",
-      label: "SGLang",
+      id: "custom_llm",
+      label: "Custom LLM",
       auth: [
         { id: "server", label: "Server", kind: "custom", run: vi.fn() },
         { id: "cloud", label: "Cloud", kind: "custom", run: vi.fn() },
       ],
       wizard: {
         modelPicker: {
-          label: "SGLang server",
+          label: "Custom LLM server",
           hint: "OpenAI-compatible local runtime",
           methodId: "server",
         },
@@ -252,15 +252,15 @@ describe("provider wizard boundaries", () => {
     });
     expectModelPickerEntries(provider, [
       {
-        value: buildProviderPluginMethodChoice("sglang", "server"),
-        label: "SGLang server",
+        value: buildProviderPluginMethodChoice("custom_llm", "server"),
+        label: "Custom LLM server",
         hint: "OpenAI-compatible local runtime",
       },
     ]);
   });
 
   it("resolves providers in setup mode across wizard consumers", () => {
-    const provider = createSglangWizardProvider({ includeModelPicker: true });
+    const provider = createCustomLlmWizardProvider({ includeModelPicker: true });
     const config = {};
     const env = createHomeEnv();
     setResolvedProviders(provider);
